@@ -46,7 +46,6 @@ function AddItem() {
       formData.append("price",price)
       formData.append("category",category)
       formData.append("foodType",foodType)
-      formData.append("price",price) 
       if(backendImage){
         formData.append("image",backendImage)
       }
