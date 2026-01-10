@@ -29,7 +29,7 @@ function OwnerItemCard({ data }) {
   {/* Actions */}
   <div className="flex items-center gap-2">
     <button className="p-2 rounded-full text-[#ff4d2d] hover:bg-[#ff4d2d]/10 transition">
-      <FaPen size={16} />
+      <FaPen size={16} onClick={()=>navigate(`/edit-item/${data._id}`)} />
     </button>
 
     <button className="p-2 rounded-full text-red-500 hover:bg-red-500/10 transition">
