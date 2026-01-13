@@ -40,22 +40,25 @@ export const addItem = async (req, res) => {
 };
 
 
-export const editItem=async()=>{
+export const editItem=async(req,res)=>{
   try {
-    const {itemId}= req.params.itemId;
+    const {itemId}= req.params;
     const {name,category,foodType,price}= req.body;
     let image;
     if(req.file){
       image= await uploadCloudinaryImage(req.file.path);
     }
     const item= await Item.findByIdAndUpdate(itemId,{
-      name,category,foodType,price,image
+      name,image,category,price,foodType
     },{new:true})
-
+    
     if(!item){
       return res.status(400).json({message:"Item not found"})
     }
-    return res.status(200).json(item)
+
+    const shop = await Shop.findOne({owner: req.userId}).populate("items")
+
+    return res.status(200).json(shop)
 
   } catch (error) {
     return res.status(500).json({message: error.message})
@@ -65,7 +68,7 @@ export const editItem=async()=>{
 
 export const getItemById= async(req,res)=>{
   try {
-    const {itemId}= req.params.itemId;
+    const itemId= req.params.itemId;
     const  item= await Item.findById(itemId);
     if(!item){
       return res.status(400).json({message:"Item not found"})

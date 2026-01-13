@@ -10,19 +10,21 @@ import { serverUrl } from "../App";
 import { useDispatch } from "react-redux";
 import { setMyShopData } from "../redux/ownerSlice";
 import { useEffect } from "react";
+import { ClipLoader } from "react-spinners";
 function EditItem() {
   const navigate = useNavigate();
+  const [currerntItem, setCurrentItem]= useState(null);  
   const { myShopData } = useSelector((state) => state.owner);
-  const [name,setName]= useState(currerntItem?.name || "");
-  const [price,setPrice]= useState(currerntItem?.price || "");
-  const [frontendImage,setFrontendImage]= useState(currerntItem?.image || null);
+  const [name,setName]= useState("");
+  const [price,setPrice]= useState(0);
+  const [frontendImage,setFrontendImage]= useState("");
   const [backendImage,setBackendImage]=useState(null);
   const imageRef= useRef();
   const dispatch= useDispatch();
   const [category,setCategory]= useState("");
-  const [foodType,setFoodType]= useState("veg");
+  const [foodType,setFoodType]= useState("");
   const {itemId}= useParams();
-  const [currerntItem, setCurrentItem]= useState(null);
+  const [loading,setLoading]= useState(false);
 
   const categories = ["Snacks",
         "Main Course",
@@ -44,6 +46,7 @@ function EditItem() {
 
   const handleSubmit=async(e)=>{
     e.preventDefault();
+    setLoading(true);
     try {
       const formData= new FormData();
       formData.append("name",name)
@@ -54,12 +57,13 @@ function EditItem() {
         formData.append("image",backendImage)
       }
       console.log("fd",formData)
-      const result= await axios.post(`${serverUrl}/api/item/add-item`,formData,{
+      const result= await axios.post(`${serverUrl}/api/item/edit-item/${itemId}`,formData,{
         withCredentials:true
       }) 
 
       dispatch(setMyShopData(result.data))
-      console.log(result.data)
+      setLoading(false)
+      navigate("/")
     } catch (error) {
       console.log("Add item error",error)
     }
@@ -80,6 +84,16 @@ function EditItem() {
     }
     handleGetItemById();
   },[itemId]);
+
+  useEffect(()=>{
+    setName(currerntItem?.name || "");
+    setPrice(currerntItem?.price || 0);
+    setCategory(currerntItem?.category || "");
+    setFrontendImage(currerntItem?.image || null);
+    setFoodType(currerntItem?.foodType || "veg");
+  },[currerntItem])
+
+
   return (
     <div className="flex justify-center flex-col items-center p-6 bg-gradient-to-br from-orange-50 relative to-white min-h-screen">
       <div
@@ -175,8 +189,9 @@ function EditItem() {
 
           </div>
         
-          <button className='w-full bg-[#ff4d2d] text-white px-6 py-3 rounded-lg font-semibold shadow-md hover:bg-orange-600 hover:shadow-lg transition-all duration-200 cursor-pointer'>
-            Save
+          <button className='w-full bg-[#ff4d2d] text-white px-6 py-3 rounded-lg font-semibold shadow-md hover:bg-orange-600 hover:shadow-lg transition-all duration-200 cursor-pointer' disabled={loading}>
+            {loading ? <ClipLoader size={20} color="white" />: "Save"}
+
           </button>
         </form>
       </div>
