@@ -1,198 +1,133 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { IoIosArrowRoundBack } from "react-icons/io";
-import { useSelector } from "react-redux";
-import { useNavigate, useParams } from "react-router-dom";
 import { FaUtensils } from "react-icons/fa";
-import { useState } from "react";
-import { useRef } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { useDispatch } from "react-redux";
 import axios from "axios";
 import { serverUrl } from "../App";
-import { useDispatch } from "react-redux";
 import { setMyShopData } from "../redux/ownerSlice";
-import { useEffect } from "react";
 import { ClipLoader } from "react-spinners";
+
 function EditItem() {
   const navigate = useNavigate();
-  const [currerntItem, setCurrentItem]= useState(null);  
-  const { myShopData } = useSelector((state) => state.owner);
-  const [name,setName]= useState("");
-  const [price,setPrice]= useState(0);
-  const [frontendImage,setFrontendImage]= useState("");
-  const [backendImage,setBackendImage]=useState(null);
-  const imageRef= useRef();
-  const dispatch= useDispatch();
-  const [category,setCategory]= useState("");
-  const [foodType,setFoodType]= useState("");
-  const {itemId}= useParams();
-  const [loading,setLoading]= useState(false);
+  const dispatch = useDispatch();
+  const { itemId } = useParams();
 
-  const categories = ["Snacks",
-        "Main Course",
-        "Desserts",
-        "Pizza",
-        "Burgers",
-        "Sandwiches",
-        "South Indian",
-        "North Indian",
-        "Chinese",
-        "Fast Food",
-        "Others"]
+  const [item, setItem] = useState(null);
+  const [name, setName] = useState("");
+  const [price, setPrice] = useState(0);
+  const [category, setCategory] = useState("");
+  const [foodType, setFoodType] = useState("veg");
+  const [preview, setPreview] = useState("");
+  const [image, setImage] = useState(null);
+  const [loading, setLoading] = useState(false);
 
-  const handleImage=(e)=>{
-    const file= e.target.files[0];
-    setBackendImage(file);
-    setFrontendImage(URL.createObjectURL(file))
-  }
+  const categories = [
+    "Snacks","Main Course","Desserts","Pizza","Burgers",
+    "Sandwiches","South Indian","North Indian","Chinese",
+    "Fast Food","Others"
+  ];
 
-  const handleSubmit=async(e)=>{
+  useEffect(() => {
+    axios.get(`${serverUrl}/api/item/get-by-id/${itemId}`, {
+      withCredentials: true,
+    }).then(res => {
+      setItem(res.data);
+      setName(res.data.name);
+      setPrice(res.data.price);
+      setCategory(res.data.category);
+      setFoodType(res.data.foodType);
+      setPreview(res.data.image);
+    });
+  }, [itemId]);
+
+  const handleImage = (e) => {
+    const file = e.target.files[0];
+    setImage(file);
+    setPreview(URL.createObjectURL(file));
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    try {
-      const formData= new FormData();
-      formData.append("name",name)
-      formData.append("price",price)
-      formData.append("category",category)
-      formData.append("foodType",foodType)
-      if(backendImage){
-        formData.append("image",backendImage)
-      }
-      console.log("fd",formData)
-      const result= await axios.post(`${serverUrl}/api/item/edit-item/${itemId}`,formData,{
-        withCredentials:true
-      }) 
 
-      dispatch(setMyShopData(result.data))
-      setLoading(false)
-      navigate("/")
-    } catch (error) {
-      console.log("Add item error",error)
-    }
-  }
+    const fd = new FormData();
+    fd.append("name", name);
+    fd.append("price", price);
+    fd.append("category", category);
+    fd.append("foodType", foodType);
+    if (image) fd.append("image", image);
 
-  useEffect(()=>{
+    await axios.post(
+      `${serverUrl}/api/item/edit-item/${itemId}`,
+      fd,
+      { withCredentials: true }
+    );
 
-    const handleGetItemById=async()=>{
-      try {
-        const res= await axios.get(`${serverUrl}/api/item/get-by-id/${itemId}`,{
-          withCredentials:true
-        })
-        setCurrentItem(res.data);
+    const shop = await axios.get(
+      `${serverUrl}/api/shop/my-shop`,
+      { withCredentials: true }
+    );
 
-      } catch (error) {
-        console.log("Get item by id error",error)
-      }
-    }
-    handleGetItemById();
-  },[itemId]);
-
-  useEffect(()=>{
-    setName(currerntItem?.name || "");
-    setPrice(currerntItem?.price || 0);
-    setCategory(currerntItem?.category || "");
-    setFrontendImage(currerntItem?.image || null);
-    setFoodType(currerntItem?.foodType || "veg");
-  },[currerntItem])
-
+    dispatch(setMyShopData(shop.data));
+    navigate("/");
+  };
 
   return (
-    <div className="flex justify-center flex-col items-center p-6 bg-gradient-to-br from-orange-50 relative to-white min-h-screen">
-      <div
-        className="absolute top-[20px] left-[20px] z-[10] mb-[10px]"
-        onClick={() => navigate("/")}
-      >
-        <IoIosArrowRoundBack size={35} className="text-[#ff4d2d]" />
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-100 flex items-center justify-center px-4">
+      
+      <div onClick={() => navigate("/")} className="absolute top-6 left-6 cursor-pointer">
+        <IoIosArrowRoundBack size={38} className="text-[#ff4d2d] hover:scale-110 transition" />
       </div>
-      <div className="max-w-lg w-full bg-white shadow-xl rounded-2xl p-8 border border-orange-100">
-        <div className="flex flex-col items-center mb-6">
-          <div className="bg-orange-100 p-4 rounded-full mb-4">
-            <FaUtensils className="text-[#ff4d2d] w-16 h-16" />
-          </div>
-          <div className="text-3xl font-extrabold text-gray-900">
-            Edit Food Item
-          </div>
-        </div>
-        {/* Form component goes here */}
-        <form className="space-y-5" onSubmit={handleSubmit}>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1" >
-              Name
-            </label>
-            <input
-              type="text"
-              onChange={(e)=>setName(e.target.value)}
-              value={name}
-              placeholder="Enter Food Name"
-              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-            />
-          </div>
-          {/* File*/}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Food Image
-            </label>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleImage}
-              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-            />
-            {frontendImage && <div className="mt-4">
-              
-              <img src={frontendImage} alt="" className="w-full h-48 object-cover rounded-lg border" />
-            </div>}
-            
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1" >
-              Enter Price
-            </label>
-            <input
-              type="number"
-              onChange={(e)=>setPrice(e.target.value)}
-              value={price}
-              placeholder="0$"
-              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1" >
-              Select category
-            
-            </label>
-            <select
-  onChange={(e) => setCategory(e.target.value)}
-  value={category}
-  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
->
-  <option value="">Select Category</option>
-  {categories.map((cate, index) => (
-    <option value={cate} key={index}>{cate}</option>
-  ))}
-</select>
 
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1" >
-              Select category
-            
-            </label>
-            <select
-  onChange={(e) => setFoodType(e.target.value)}
-  value={foodType}
-  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
->
-  <option value="">Select Category</option>
-  <option value="veg">Veg</option>
-  <option value="non-veg">Non-Veg</option>
-</select>
-
-
-          </div>
+      <div className="w-full max-w-xl backdrop-blur-xl bg-white/80 border border-orange-100 shadow-2xl rounded-3xl overflow-hidden">
         
-          <button className='w-full bg-[#ff4d2d] text-white px-6 py-3 rounded-lg font-semibold shadow-md hover:bg-orange-600 hover:shadow-lg transition-all duration-200 cursor-pointer' disabled={loading}>
-            {loading ? <ClipLoader size={20} color="white" />: "Save"}
+        <div className="bg-gradient-to-r from-[#ff4d2d] to-orange-500 p-6 text-white text-center">
+          <FaUtensils className="mx-auto mb-2 w-14 h-14" />
+          <h1 className="text-2xl font-bold">Edit Food Item</h1>
+          <p className="text-sm opacity-90">Make your dish irresistible 🍽️</p>
+        </div>
 
+        <form onSubmit={handleSubmit} className="p-6 space-y-5">
+
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Food Name"
+            className="input"
+          />
+
+          <input
+            type="number"
+            value={price}
+            onChange={(e) => setPrice(Number(e.target.value))}
+            placeholder="Price"
+            className="input"
+          />
+
+          <select value={category} onChange={(e) => setCategory(e.target.value)} className="input">
+            <option value="">Select Category</option>
+            {categories.map(c => <option key={c}>{c}</option>)}
+          </select>
+
+          <select value={foodType} onChange={(e) => setFoodType(e.target.value)} className="input">
+            <option value="veg">Veg 🌱</option>
+            <option value="non-veg">Non-Veg 🍗</option>
+          </select>
+
+          <input type="file" accept="image/*" onChange={handleImage} />
+
+          {preview && (
+            <img src={preview} alt="" className="w-full h-44 object-cover rounded-xl shadow-md" />
+          )}
+
+          <button
+            disabled={loading}
+            className="w-full bg-gradient-to-r from-[#ff4d2d] to-orange-500 text-white py-3 rounded-xl font-semibold hover:shadow-lg transition"
+          >
+            {loading ? <ClipLoader size={22} color="white" /> : "Save Changes"}
           </button>
+
         </form>
       </div>
     </div>
@@ -200,7 +135,3 @@ function EditItem() {
 }
 
 export default EditItem;
-
-
-
-//8 39
