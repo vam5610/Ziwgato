@@ -1,7 +1,7 @@
 import React from "react";
 import { IoIosArrowRoundBack } from "react-icons/io";
 import { useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { FaUtensils } from "react-icons/fa";
 import { useState } from "react";
 import { useRef } from "react";
@@ -9,17 +9,21 @@ import axios from "axios";
 import { serverUrl } from "../App";
 import { useDispatch } from "react-redux";
 import { setMyShopData } from "../redux/ownerSlice";
+import { useEffect } from "react";
 function EditItem() {
   const navigate = useNavigate();
   const { myShopData } = useSelector((state) => state.owner);
-  const [name,setName]= useState("");
-  const [price,setPrice]= useState(0);
-  const [frontendImage,setFrontendImage]= useState(null);
-  const [backendImage,setBackendImage]=useState(null)
+  const [name,setName]= useState(currerntItem?.name || "");
+  const [price,setPrice]= useState(currerntItem?.price || "");
+  const [frontendImage,setFrontendImage]= useState(currerntItem?.image || null);
+  const [backendImage,setBackendImage]=useState(null);
   const imageRef= useRef();
   const dispatch= useDispatch();
   const [category,setCategory]= useState("");
   const [foodType,setFoodType]= useState("veg");
+  const {itemId}= useParams();
+  const [currerntItem, setCurrentItem]= useState(null);
+
   const categories = ["Snacks",
         "Main Course",
         "Desserts",
@@ -61,6 +65,21 @@ function EditItem() {
     }
   }
 
+  useEffect(()=>{
+
+    const handleGetItemById=async()=>{
+      try {
+        const res= await axios.get(`${serverUrl}/api/item/get-by-id/${itemId}`,{
+          withCredentials:true
+        })
+        setCurrentItem(res.data);
+
+      } catch (error) {
+        console.log("Get item by id error",error)
+      }
+    }
+    handleGetItemById();
+  },[itemId]);
   return (
     <div className="flex justify-center flex-col items-center p-6 bg-gradient-to-br from-orange-50 relative to-white min-h-screen">
       <div
@@ -75,7 +94,7 @@ function EditItem() {
             <FaUtensils className="text-[#ff4d2d] w-16 h-16" />
           </div>
           <div className="text-3xl font-extrabold text-gray-900">
-            Add Food Item
+            Edit Food Item
           </div>
         </div>
         {/* Form component goes here */}
