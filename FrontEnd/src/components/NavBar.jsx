@@ -11,6 +11,7 @@ import { useDispatch } from "react-redux";
 import { setUserData } from "../redux/userSlice";
 import { FaPlus } from "react-icons/fa";
 import { IoReceiptSharp } from "react-icons/io5";
+import { useNavigate } from "react-router-dom";
 
 function NavBar() {
   const { userData, currentCity } = useSelector((state) => state.user);
@@ -18,6 +19,7 @@ function NavBar() {
   const [showInfo, setShowInfo] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const dispath = useDispatch();
+  const navigate= useNavigate();
 
   const handleLogOut = () => {
     try {
@@ -69,7 +71,7 @@ function NavBar() {
 
         {userData.user.role === "owner" ?
           <> {myShopData && <>
-          <button className='hidden md:flex items-center gap-1 p-2 cursor-pointer rounded-full bg-[#ff4d2d]/10 text-[#ff4d2d]'>
+          <button className='hidden md:flex items-center gap-1 p-2 cursor-pointer rounded-full bg-[#ff4d2d]/10 text-[#ff4d2d]' onClick={()=>navigate("/add-item")}>
               <FaPlus size={20} />
               <span>Add Food items</span>
             </button>
@@ -120,9 +122,9 @@ function NavBar() {
             <div className="text-[17px] font-semibold">
               {userData.user.fullName}
             </div>
-            <div className="md:hidden text-[#ff4d2d] font-semibold cursor-pointer">
+            {userData?.role=="user" && <div className="md:hidden text-[#ff4d2d] font-semibold cursor-pointer">
               My Orders
-            </div>
+            </div>}
             <div
               className="text-[#ff4d2d] font-semibold cursor-pointer"
               onClick={handleLogOut}

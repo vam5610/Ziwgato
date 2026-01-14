@@ -68,7 +68,6 @@ function EditItem() {
       `${serverUrl}/api/shop/my-shop`,
       { withCredentials: true }
     );
-
     dispatch(setMyShopData(shop.data));
     navigate("/");
   };
