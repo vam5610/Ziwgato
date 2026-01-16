@@ -3,14 +3,15 @@ import NavBar from './NavBar'
 import { categories } from '../category'
 import CategoryCard from './CategoryCard'
 import { FaCircleChevronLeft, FaCircleChevronRight } from "react-icons/fa6";
+import { useSelector } from 'react-redux';
 
 function UserDashBoard() {
   const cateScrollRef = useRef(null);
 
   const [showLeftCateButton, setShowLeftCateButton] = useState(false);
   const [showRightCateButton, setShowRightCateButton] = useState(false);
+  const {currentCity}= useSelector((state)=>(state.user))
 
-  // Update button visibility based on scroll position
   const updateButtons = () => {
     const el = cateScrollRef.current;
     if (!el) return;
@@ -86,6 +87,11 @@ function UserDashBoard() {
           )}
         </div>
       </div>
+      
+      <div className='w-full max-w-6xl flex flex-col gap-5 items-start p-[10px]'>
+        <h1>Best Shop in {currentCity} </h1>
+      </div>
+
     </div>
   );
 }
