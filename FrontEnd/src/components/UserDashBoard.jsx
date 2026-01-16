@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import NavBar from './NavBar'
 import { categories } from '../category'
 import CategoryCard from './CategoryCard'
@@ -21,6 +21,14 @@ function UserDashBoard() {
       console.log(element)
     }
   }
+
+  useEffect(()=>{
+    if(cateScrollRef.current){
+      cateScrollRef.current.addEventListener('scroll',()=>{
+        updateButton(cateScrollRef,setShowCateButton,setShowRightCateButton)
+      })
+    }
+  },[])
   
   const scrollHandler =(ref,directions)=>{
     if(ref.current){
