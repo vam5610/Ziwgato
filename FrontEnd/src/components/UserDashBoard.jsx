@@ -90,6 +90,34 @@ function UserDashBoard() {
       
       <div className='w-full max-w-6xl flex flex-col gap-5 items-start p-[10px]'>
         <h1>Best Shop in {currentCity} </h1>
+        <div className='w-full relative'>
+          {showLeftCateButton && (
+            <button
+              className='absolute left-0 top-1/2 -translate-y-1/2 bg-[#ff4d2d] text-white p-2 rounded-full shadow-lg hover:bg-[#e64528] z-10'
+              onClick={() => scrollHandler("left")}
+            >
+              <FaCircleChevronLeft />
+            </button>
+          )}
+
+          <div
+            ref={cateScrollRef}
+            className='w-full flex overflow-x-auto gap-4 pb-2 scroll-smooth'
+          >
+            {categories.map((cate, index) => (
+              <CategoryCard data={cate} key={index} />
+            ))}
+          </div>
+
+          {showRightCateButton && (
+            <button
+              className='absolute right-0 top-1/2 -translate-y-1/2 bg-[#ff4d2d] text-white p-2 rounded-full shadow-lg hover:bg-[#e64528] z-10'
+              onClick={() => scrollHandler("right")}
+            >
+              <FaCircleChevronRight />
+            </button>
+          )}
+        </div>
       </div>
 
     </div>
