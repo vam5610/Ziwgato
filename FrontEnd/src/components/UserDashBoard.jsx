@@ -4,6 +4,7 @@ import { categories } from "../category";
 import CategoryCard from "./CategoryCard";
 import { FaCircleChevronLeft, FaCircleChevronRight } from "react-icons/fa6";
 import { useSelector } from "react-redux";
+import FoodCard from "./FoodCard";
 
 function UserDashBoard() {
   /* ---------------- REFS ---------------- */
@@ -17,9 +18,8 @@ function UserDashBoard() {
   const [showLeftShopButton, setShowLeftShopButton] = useState(false);
   const [showRightShopButton, setShowRightShopButton] = useState(false);
 
-  const { currentCity, shopsInMyCity } = useSelector((state) => state.user);
-console.log("Current City:", currentCity);
-console.log("Shop In My City:", shopsInMyCity);
+  const { currentCity, shopsInMyCity,itemsInMyCity } = useSelector((state) => state.user);
+
 
   
 
@@ -164,6 +164,11 @@ console.log("Shop In My City:", shopsInMyCity);
         <h1 className="text-gray-800 text-2xl sm:text-3xl">
           Suggested Food Items 
         </h1>
+        <div className="w-full h-auto flex flex-wrap gap-[20px] justify-center">
+          {itemsInMyCity?.map((item,index)=>(
+            <FoodCard key={index} data={item} />
+          ))}
+        </div>
 
       </div>
     </div>
