@@ -86,93 +86,110 @@ function UserDashBoard() {
   }, []);
 
   /* ---------------- UI ---------------- */
-  return (
-    <div className="w-screen min-h-screen flex flex-col gap-6 items-center bg-[#fff9f6] overflow-y-auto">
-      <NavBar />
+ return (
+  <div className="w-screen min-h-screen flex flex-col items-center bg-gradient-to-br from-[#fff4ef] via-[#fff9f6] to-[#fff] overflow-y-auto">
+    <NavBar />
 
-      {/* ----------- CATEGORY SECTION ----------- */}
-      <div className="w-full max-w-6xl bg-white p-5 rounded-2xl shadow-md mt-4">
-        <h1 className="text-xl font-semibold mb-4">Hello Inspiration</h1>
+    {/* ----------- CATEGORY SECTION ----------- */}
+    <div className="w-full max-w-7xl bg-white/90 backdrop-blur-lg p-6 rounded-3xl shadow-xl mt-6">
+      <h1 className="text-2xl font-bold mb-5 text-gray-800">
+        👋 Hello Inspiration
+      </h1>
 
-        <div className="relative">
-          {showLeftCateButton && (
-            <button
-              onClick={() => scrollCategory("left")}
-              className="absolute left-0 top-1/2 -translate-y-1/2 bg-[#ff4d2d] text-white p-2 rounded-full z-10"
-            >
-              <FaCircleChevronLeft />
-            </button>
-          )}
-
-          <div
-            ref={cateScrollRef}
-            className="flex gap-4 overflow-x-auto scroll-smooth pb-2"
+      <div className="relative">
+        {showLeftCateButton && (
+          <button
+            onClick={() => scrollCategory("left")}
+            className="absolute left-[-18px] top-1/2 -translate-y-1/2 bg-gradient-to-r from-[#ff4d2d] to-[#ff7a5c] text-white p-3 rounded-full shadow-lg hover:scale-110 transition z-10"
           >
-            {categories.map((cate, index) => (
-              <CategoryCard key={index} name={cate.category} image={cate.image} />
-            ))}
-          </div>
+            <FaCircleChevronLeft />
+          </button>
+        )}
 
-          {showRightCateButton && (
-            <button
-              onClick={() => scrollCategory("right")}
-              className="absolute right-0 top-1/2 -translate-y-1/2 bg-[#ff4d2d] text-white p-2 rounded-full z-10"
-            >
-              <FaCircleChevronRight />
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* ----------- SHOP SECTION ----------- */}
-      <div className="w-full max-w-6xl p-5">
-        <h1 className="text-xl font-semibold mb-4">
-          Best Shops in {currentCity}
-        </h1>
-
-        <div className="relative">
-          {showLeftShopButton && (
-            <button
-              onClick={() => scrollShop("left")}
-              className="absolute left-0 top-1/2 -translate-y-1/2 bg-[#ff4d2d] text-white p-2 rounded-full z-10"
-            >
-              <FaCircleChevronLeft />
-            </button>
-          )}
-
-          <div
-            ref={shopScrollRef}
-            className="flex gap-4 overflow-x-auto scroll-smooth pb-2"
-          >
-            {shopsInMyCity?.map((shop, index) => (
-              <CategoryCard name={shop.name} image={shop.image} key={index} />
-            ))}
-          </div>
-
-          {showRightShopButton && (
-            <button
-              onClick={() => scrollShop("right")}
-              className="absolute right-0 top-1/2 -translate-y-1/2 bg-[#ff4d2d] text-white p-2 rounded-full z-10"
-            >
-              <FaCircleChevronRight />
-            </button>
-          )}
-        </div>
-      </div>
-
-      <div className="w-full max-w-6xl flex flex-col gap-5 items-start p-[10px]">
-        <h1 className="text-gray-800 text-2xl sm:text-3xl">
-          Suggested Food Items 
-        </h1>
-        <div className="w-full h-auto flex flex-wrap gap-[20px] justify-center">
-          {itemsInMyCity?.map((item,index)=>(
-            <FoodCard key={index} data={item} />
+        <div
+          ref={cateScrollRef}
+          className="flex gap-5 overflow-x-auto scroll-smooth pb-3 scrollbar-hide"
+        >
+          {categories.map((cate, index) => (
+            <CategoryCard
+              key={index}
+              name={cate.category}
+              image={cate.image}
+            />
           ))}
         </div>
 
+        {showRightCateButton && (
+          <button
+            onClick={() => scrollCategory("right")}
+            className="absolute right-[-18px] top-1/2 -translate-y-1/2 bg-gradient-to-r from-[#ff4d2d] to-[#ff7a5c] text-white p-3 rounded-full shadow-lg hover:scale-110 transition z-10"
+          >
+            <FaCircleChevronRight />
+          </button>
+        )}
       </div>
     </div>
-  );
+
+    {/* ----------- SHOP SECTION ----------- */}
+    <div className="w-full max-w-7xl px-6 mt-10">
+      <h1 className="text-2xl font-bold mb-5 text-gray-800">
+        🏬 Best Shops in <span className="text-[#ff4d2d]">{currentCity}</span>
+      </h1>
+
+      <div className="relative">
+        {showLeftShopButton && (
+          <button
+            onClick={() => scrollShop("left")}
+            className="absolute left-[-18px] top-1/2 -translate-y-1/2 bg-gradient-to-r from-[#ff4d2d] to-[#ff7a5c] text-white p-3 rounded-full shadow-lg hover:scale-110 transition z-10"
+          >
+            <FaCircleChevronLeft />
+          </button>
+        )}
+
+        <div
+          ref={shopScrollRef}
+          className="flex gap-5 overflow-x-auto scroll-smooth pb-3 scrollbar-hide"
+        >
+          {shopsInMyCity?.map((shop, index) => (
+            <CategoryCard
+              key={index}
+              name={shop.name}
+              image={shop.image}
+            />
+          ))}
+        </div>
+
+        {showRightShopButton && (
+          <button
+            onClick={() => scrollShop("right")}
+            className="absolute right-[-18px] top-1/2 -translate-y-1/2 bg-gradient-to-r from-[#ff4d2d] to-[#ff7a5c] text-white p-3 rounded-full shadow-lg hover:scale-110 transition z-10"
+          >
+            <FaCircleChevronRight />
+          </button>
+        )}
+      </div>
+    </div>
+
+    {/* ----------- FOOD SECTION ----------- */}
+    <div className="w-full max-w-7xl flex flex-col gap-6 px-6 mt-12 mb-10">
+      <h1 className="text-3xl font-extrabold text-gray-800 text-center sm:text-left">
+        🍔 Suggested Food Items
+      </h1>
+
+      <div className="w-full flex flex-wrap gap-8 justify-center sm:justify-start">
+        {itemsInMyCity?.map((item, index) => (
+          <div
+            key={index}
+            className="transform hover:scale-105 transition duration-300"
+          >
+            <FoodCard data={item} />
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+);
+
 }
 
 export default UserDashBoard;
