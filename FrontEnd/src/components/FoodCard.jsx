@@ -2,10 +2,13 @@ import React, { useState } from "react";
 import { FaLeaf, FaDrumstickBite, FaStar } from "react-icons/fa";
 import { CiStar } from "react-icons/ci";
 import { FaMinus, FaPlus, FaCartPlus } from "react-icons/fa";
+import { useDispatch, useSelector } from "react-redux";
+import { addToCart } from "../redux/userSlice";
 
 function FoodCard({ data }) {
   const [quantity, setQuantity] = useState(0);
-
+  const dispatch= useDispatch();
+  const {cartItems}= useSelector(state=>state.user)
   const renderStars = (rating) => {
     const stars = [];
     for (let i = 1; i <= 5; i++) {
@@ -75,13 +78,21 @@ function FoodCard({ data }) {
 
   <button
     onClick={handleIncreaseQty}
-    className="px-2 py-1 "
+    className="px-2 py-1  "  
   >
     <FaPlus size={12} />
   </button>
 
   <div className="relative">
-    <button className="bg-[#ff4d2d] text-white px-3 py-2 rounded-3xl hover:bg-[#e64528] transition">
+    <button className={`${cartItems.some(i=>i.id== data._id)? "bg-gray-700" : "bg-[#ff4d2d]"} text-white px-3 py-2 rounded-3xl hover:bg-[#e64528] transition `} onClick={()=>dispatch(addToCart({
+      id:data._id,
+      name: data.name,
+      image: data.image,
+      price: data.price, 
+      shop: data.shop,
+      quantity: quantity,
+      foodType:data.foodType
+    }))} >
       <FaCartPlus />
     </button>
     {quantity > 0 && (

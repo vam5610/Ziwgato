@@ -8,7 +8,7 @@ export const getCurrentUser=async(req,res)=>{
       return res.status(400).json({message:"UserId is required"});
     }
     const user= await User.findById(userId);
-    if(!userId){
+    if(!user){
       return res.status(404).json({message:"User not found"});
     }
     return res.status(200).json({user});

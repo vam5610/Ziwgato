@@ -16,7 +16,7 @@ function useGetShopByCity() {
         withCredentials:true
       })
       dispatch(setShopsInMyCity(result.data.shop))
-      console.log(result.data)
+      
       } catch (error) {
         console.log(error) 
       }
