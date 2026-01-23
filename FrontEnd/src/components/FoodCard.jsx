@@ -84,7 +84,8 @@ function FoodCard({ data }) {
   </button>
 
   <div className="relative">
-    <button className={`${cartItems.some(i=>i.id== data._id)? "bg-gray-700" : "bg-[#ff4d2d]"} text-white px-3 py-2 rounded-3xl hover:bg-[#e64528] transition `} onClick={()=>dispatch(addToCart({
+    <button className={`${cartItems.some(i=>i.id== data._id)? "bg-gray-700" : "bg-[#ff4d2d]"} text-white px-3 py-2 rounded-3xl hover:bg-[#e64528] transition `} onClick={()=>{
+      quantity>0? dispatch(addToCart({
       id:data._id,
       name: data.name,
       image: data.image,
@@ -92,7 +93,8 @@ function FoodCard({ data }) {
       shop: data.shop,
       quantity: quantity,
       foodType:data.foodType
-    }))} >
+    })) : ""
+    }} >   
       <FaCartPlus />
     </button>
     {quantity > 0 && (
