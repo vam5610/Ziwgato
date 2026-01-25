@@ -28,14 +28,14 @@ const shopOrderSchema= new mongoose.Schema({
 const orderSchema = new mongoose.Schema(
   {
     user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-    paymentMethod: { type: String, enum: ["COD", "ONLINE"], required: true },
+    paymentMethod: { type: String, enum: ["cod", "online"], required: true },
     deliveryAddress: {
       text: String,
       latitude: Number,
       longitude: Number,
     },
     totalAmount: { type: Number, required: true },
-    shopOrder: [shopOrderSchema]
+    shopOrders: [shopOrderSchema]
   },
   { timestamps: true },
 );

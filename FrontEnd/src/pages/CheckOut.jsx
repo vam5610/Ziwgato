@@ -14,6 +14,7 @@ import axios from "axios";
 import { MdDeliveryDining } from "react-icons/md";
 import { FaMobileScreenButton } from "react-icons/fa6";
 import { FaCreditCard } from "react-icons/fa6";
+import { serverUrl } from "../App";
 
 function CheckOut() {
   const { location, address } = useSelector((state) => state.map);
@@ -52,6 +53,32 @@ function CheckOut() {
       console.log(error);
     }
   };
+
+  const handlePlaceOrder= async()=>{
+    try {
+      const result= await axios.post(`${serverUrl}/api/order/place-order`,{
+        paymentMethod,
+        deliveryAddress:{
+          text: addressInput,
+          latitude: location.lat,
+          longitude:location.lon
+         },
+         totalAmount,
+         cartItems
+      },{withCredentials:true})
+      console.log(result.data)
+    }catch (error) {
+  if (error.response) {
+    console.log("Server error:", error.response.data);
+    console.log("Status:", error.response.status);
+  } else if (error.request) {
+    console.log("No response from server:", error.request);
+  } else {
+    console.log("Axios setup error:", error.message);
+  }
+}
+
+  }
 
   const currentLocation = () => {
     navigator.geolocation.getCurrentPosition(async (postion) => {
@@ -211,7 +238,7 @@ function CheckOut() {
             </div>
           </div>
         </section>
-        <button className='w-full bg-[#ff4d2d] hover:bg-[#e64526] text-white py-3 rounded-xl font-semibold' >{paymentMethod==="cod"?"Place Order" :"Pay & place order"}</button>
+        <button className='w-full bg-[#ff4d2d] hover:bg-[#e64526] text-white py-3 rounded-xl font-semibold' onClick={handlePlaceOrder}>{paymentMethod==="cod"?"Place Order" :"Pay & place order"}</button>
       </div>
     </div>
   );
