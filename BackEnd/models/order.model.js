@@ -6,6 +6,7 @@ const shopItemsSchema = new mongoose.Schema({
     type:mongoose.Schema.Types.ObjectId,
     ref: "Item"
   },
+  name:String,
   price: Number,
   quantity:Number
 }, {timestamps: true});
