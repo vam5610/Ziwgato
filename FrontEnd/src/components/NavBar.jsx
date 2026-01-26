@@ -15,7 +15,7 @@ import { useNavigate } from "react-router-dom";
 
 function NavBar() {
   const { userData, currentCity,cartItems} = useSelector((state) => state.user);
-  const {myShopData}= useSelector((state)=>state.owner);
+  const {myShopData,myOrders}= useSelector((state)=>state.owner);
   const [showInfo, setShowInfo] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const dispath = useDispatch();
