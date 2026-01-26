@@ -15,6 +15,7 @@ import { MdDeliveryDining } from "react-icons/md";
 import { FaMobileScreenButton } from "react-icons/fa6";
 import { FaCreditCard } from "react-icons/fa6";
 import { serverUrl } from "../App";
+import { addMyorders } from "../redux/userSlice";
 
 function CheckOut() {
   const { location, address } = useSelector((state) => state.map);
@@ -66,7 +67,7 @@ function CheckOut() {
          totalAmount,
          cartItems
       },{withCredentials:true})
-      console.log(result.data)
+      dispatch(addMyorders(result.data))
       navigate("/order-placed")
     }catch (error) {
   if (error.response) {

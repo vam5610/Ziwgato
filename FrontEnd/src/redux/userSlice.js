@@ -59,9 +59,12 @@ const userSlice= createSlice({
     },
     setMyOrders:(state,action)=>{
       state.myOrders= action.payload
+    },
+    addMyorders:(state,action)=>{
+      state.myOrders= [action.payload, ...state.myOrders]
     }
-
+    
   }
 })
-export const {setUserData,setCurrentCity,setCurrentState,setCurrentAddress,setShopsInMyCity,setItemsInMyCity,addToCart,updateQuantity,removeCartItem,setMyOrders}= userSlice.actions;
+export const {setUserData,setCurrentCity,setCurrentState,setCurrentAddress,setShopsInMyCity,setItemsInMyCity,addToCart,updateQuantity,removeCartItem,setMyOrders,addMyorders}= userSlice.actions;
 export default userSlice.reducer;
