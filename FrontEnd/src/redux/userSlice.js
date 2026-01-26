@@ -10,7 +10,8 @@ const userSlice= createSlice({
     shopsInMyCity: null,
     itemsInMyCity: null,
     cartItems:[],
-    totalAmount:0
+    totalAmount:0,
+    myOrders:[] 
   },
   reducers:{
     setUserData:(state,action)=>{
@@ -48,16 +49,19 @@ const userSlice= createSlice({
       if(item){
         item.quantity= quantity;
       }
-      state.totalAmount=state.cartItems.reduce((sum,i)=>sum + i.prices * quantity,0)
+      state.totalAmount=state.cartItems.reduce((sum,i)=>sum + i.price * quantity,0)
     },
     removeCartItem:(state,action)=>{
       const Rid= action.payload;
       state.cartItems= state.cartItems.filter(i=>i.id!== Rid);
       
-      state.totalAmount=state.cartItems.reduce((sum,i)=>sum + i.prices * quantity,0)
+      state.totalAmount=state.cartItems.reduce((sum,i)=>sum + i.price * quantity,0)
+    },
+    setMyOrders:(state,action)=>{
+      state.myOrders= action.payload
     }
-    
+
   }
 })
-export const {setUserData,setCurrentCity,setCurrentState,setCurrentAddress,setShopsInMyCity,setItemsInMyCity,addToCart,updateQuantity,removeCartItem}= userSlice.actions;
+export const {setUserData,setCurrentCity,setCurrentState,setCurrentAddress,setShopsInMyCity,setItemsInMyCity,addToCart,updateQuantity,removeCartItem,setMyOrders}= userSlice.actions;
 export default userSlice.reducer;

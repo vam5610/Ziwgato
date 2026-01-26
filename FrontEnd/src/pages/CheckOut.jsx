@@ -67,6 +67,7 @@ function CheckOut() {
          cartItems
       },{withCredentials:true})
       console.log(result.data)
+      navigate("/order-placed")
     }catch (error) {
   if (error.response) {
     console.log("Server error:", error.response.data);

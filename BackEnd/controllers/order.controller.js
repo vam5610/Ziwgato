@@ -1,5 +1,6 @@
 import { Order } from "../models/order.model.js";
 import Shop from "../models/shop.model.js";
+import User from "../models/user.model.js";
 
 export const placeOrder = async (req, res) => {
   try {
@@ -8,13 +9,14 @@ export const placeOrder = async (req, res) => {
       return res.status(400).json({ message: "Cart is empty" });
     }
     if (
-  !deliveryAddress?.text ||
-  deliveryAddress.latitude === undefined ||
-  deliveryAddress.longitude === undefined
-) {
-  return res.status(400).json({ message: "Delivery address is incomplete" });
-}
-
+      !deliveryAddress?.text ||
+      deliveryAddress.latitude === undefined ||
+      deliveryAddress.longitude === undefined
+    ) {
+      return res
+        .status(400)
+        .json({ message: "Delivery address is incomplete" });
+    }
 
     const groupItemsByShop = {};
 
@@ -34,13 +36,15 @@ export const placeOrder = async (req, res) => {
         }
         const items = groupItemsByShop[shopId];
         const subTotal = items.reduce(
-          (sum, i) => sum + Number(i.price) * Number(i.quantity),0,);
+          (sum, i) => sum + Number(i.price) * Number(i.quantity),
+          0,
+        );
         return {
           shop: shop._id,
           owner: shop.owner._id,
           subTotal,
           shopOrderItem: items.map((i) => ({
-            item: i._id,
+            item: i.id,
             name: i.name,
             price: i.price,
             quantity: i.quantity,
@@ -62,7 +66,26 @@ export const placeOrder = async (req, res) => {
   }
 };
 
-//groupItemsByShop ={
-//  shopId1: [item1, item2],
-//  shopId2: [item3]
-//}
+export const getMyOrders = async (req, res) => {
+  try {
+    const user = await User.findById(req.userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
+    if (user.role == "user") {
+      const orders =await Order.find({ user: req.userId })
+        .sort({ createdAt: -1 })
+        .populate("shopOrders.shop", "name")
+        .populate("shopOrders.owner", "name email mobile")
+        .populate("shopOrders.shopOrderItem.item", "name image price");
+      return res.status(200).json(orders);
+    } else if (user.role == "owner") {
+      const orders = await Order.find({ "shopOrders.owner": req.userId })
+        .sort({ createdAt: -1 })
+        .populate("shopOrders.shop", "name")
+        .populate("user")
+        .populate("shopOrders.shopOrderItem.item", "name image price");
+      return res.status(200).json(orders);
+    }
+  } catch (error) {
+    return res.status(500).json({message:"My orders error"});
+  }
+};

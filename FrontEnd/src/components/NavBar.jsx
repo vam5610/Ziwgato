@@ -79,7 +79,7 @@ function NavBar() {
               <FaPlus size={20} />
             </button>
           </>} 
-            <div className='hidden md:flex items-center gap-2 cursor-pointer relative px-3 py-1 rounded-lg bg-[#ff4d2d]/10 text-[#ff4d2d] font-medium'>
+            <div className='hidden md:flex items-center gap-2 cursor-pointer relative px-3 py-1 rounded-lg bg-[#ff4d2d]/10 text-[#ff4d2d] font-medium' onClick={()=>navigate("/my-orders")}>
               <IoReceiptSharp size={20} />
               <span>My Orders</span>
               <span className="absolute right-[-9px] top-[-12px] text-[#ff4d2d]">
@@ -104,7 +104,7 @@ function NavBar() {
             </span>
           </div>
       
-        <button className="hidden md:block px-3 py-1 rounded-lg bg-[#ff4d2d]/10 text-[#ff4d2d] text-sm font-medium">
+        <button className="hidden md:block px-3 py-1 rounded-lg bg-[#ff4d2d]/10 text-[#ff4d2d] text-sm font-medium" onClick={()=>navigate("/my-orders")}>
           My orders
         </button>
         
@@ -122,7 +122,7 @@ function NavBar() {
             <div className="text-[17px] font-semibold">
               {userData.user.fullName}
             </div>
-            {userData?.role=="user" && <div className="md:hidden text-[#ff4d2d] font-semibold cursor-pointer">
+            {userData?.role=="user" && <div className="md:hidden text-[#ff4d2d] font-semibold cursor-pointer" onClick={()=>navigate("/my-orders")}>
               My Orders
             </div>}
             <div
