@@ -25,10 +25,15 @@ const shopOrderSchema= new mongoose.Schema({
   subTotal:Number,
   status:{
     type:String,
-    enum: ["pending","preparing","pending","delivered"],
+    enum: ["pending","preparing","out of delivery","delivered"],
     default:"pending"
   },
-  shopOrderItem:[shopItemsSchema]
+  shopOrderItem:[shopItemsSchema],
+  assignment:{
+    type:mongoose.Schema.Types.ObjectId,
+    ref:"DeliveryAssignment",
+    default:null
+  }
 })
 
 const orderSchema = new mongoose.Schema(

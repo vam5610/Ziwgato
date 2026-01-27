@@ -1,3 +1,4 @@
+import DeliveryAssignment from "../models/deliveryAssignment.model.js";
 import { Order } from "../models/order.model.js";
 import Shop from "../models/shop.model.js";
 import User from "../models/user.model.js";
@@ -112,7 +113,29 @@ export const updateOrderStatus=async(req,res)=>{
       return res.status(400).json({message: "Shop order not found"})
 
     }
+
     shopOrder.status= status 
+    if(status=="out of delivery" || !shopOrder.assignment){
+      const {latitude, longitude}= order.deliveryAddress
+      const nearByDeliveryBoys= await User.find({
+        role: "deliveryBoy", 
+        location:{
+          $near:{
+            $geometry:{type:"Point",coordinates:[Number(longitude), Number(latitude)]},
+            $maxDistance: 5000
+          }
+        }
+      })
+      const nearByIds= nearByDeliveryBoys.map(b=>b._id)
+      const busyIds= await DeliveryAssignment.find({
+        assignedTO:{$in:nearByIds},
+        status:{$nin:["broadcasted","completed"]}
+      }).distinct("assignedTo")
+
+      const busyIdSet= new Set(busyIds.map(id=>String(id)))
+      const availableBoys= nearByDeliveryBoys.filter(b=>!busyIdSet.has(b._id))
+      
+    }
     await shopOrder.save()
     await order.save()
     return res.status(200).json(shopOrder.status)
