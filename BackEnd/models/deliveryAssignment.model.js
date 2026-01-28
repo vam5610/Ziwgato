@@ -10,7 +10,7 @@ const deliveryAssignmentSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Shop",
     },
-    shopOrderid: {
+    shopOrderId: {
       type: mongoose.Schema.Types.ObjectId,
       required: true,
     },

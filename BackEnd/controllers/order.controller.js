@@ -115,6 +115,7 @@ export const updateOrderStatus=async(req,res)=>{
     }
 
     shopOrder.status= status 
+    let deliveryBoyPayLoad=[]
     if(status=="out of delivery" || !shopOrder.assignment){
       const {latitude, longitude}= order.deliveryAddress
       const nearByDeliveryBoys= await User.find({
@@ -133,9 +134,38 @@ export const updateOrderStatus=async(req,res)=>{
       }).distinct("assignedTo")
 
       const busyIdSet= new Set(busyIds.map(id=>String(id)))
-      const availableBoys= nearByDeliveryBoys.filter(b=>!busyIdSet.has(b._id))
-      
-    }
+      const availableBoys= nearByDeliveryBoys.filter(b=>!busyIdSet.has(String(b._id)))
+      const candidates= availableBoys.map(b=>b._id)
+      if(candidates.length==0){
+        await order.save();
+        return res.json({
+          message:"Order status updated but there is no delivery boys available"
+        })
+      }
+
+      const deliveryAssignment=await DeliveryAssignment.create({
+        order: order._id,
+        shop:shopOrder.shop,
+        shopOrderId:shopOrder._id,
+        broadCastedTo:candidates,
+        status: "broadcasted"
+      })
+
+      shopOrder.assignedDeliveryBoy= deliveryAssignment.assignedTO
+      shopOrder.assignment=deliveryAssignment._id
+      deliveryBoyPayLoad= availableBoys.map(b=>({
+        id:b._id,
+        fullName:b.fullName,
+        longitude:b.location.coordinates?.[0],
+        longitude:b.location.coordinates?.[1],
+        mobile: b.mobile
+      }))
+
+  }
+    await order.populate("shopOrders.shop", "name" )
+    await order.populate("shopOrders.assignedDeliveryBoy", "fullName email mobile")
+    
+    
     await shopOrder.save()
     await order.save()
     return res.status(200).json(shopOrder.status)
