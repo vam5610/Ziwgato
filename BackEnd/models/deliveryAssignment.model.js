@@ -15,7 +15,7 @@ const deliveryAssignmentSchema = new mongoose.Schema(
       required: true,
     },
     broadCastedTo: [
-      {
+      { 
         type: mongoose.Schema.Types.ObjectId,
         ref: "user",
       },

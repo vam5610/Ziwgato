@@ -4,14 +4,19 @@ import { MdPhone } from "react-icons/md";
 import { serverUrl } from "../App";
 import { useDispatch } from "react-redux";
 import { updateOrderStatus } from "../redux/userSlice";
+import { useState } from "react";
 
 function OwnerOrderCard({ data }) {
   const dispatch= useDispatch()
+  const [availableBoys,setAvailableBoys]= useState([])
+
   const handleUpdateStatus=async(orderId,shopId,status)=>{
     try {
       const result= await axios.post(`${serverUrl}/api/order/update-status/${orderId}/${shopId}`,{status},{withCredentials:true})
       dispatch(updateOrderStatus({orderId,shopId,status}))
+      setAvailableBoys(result.data.availableBoys)
       console.log(result.data)
+      
     } catch (error) {
       console.log(error)
     }

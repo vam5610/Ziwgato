@@ -35,7 +35,6 @@ function SignIn() {
       const result= await axios.post(`${serverUrl}/api/auth/signin`,{
         email,password
       },{withCredentials:true})
-      
       dispatch(setUserData(result.data))
       setErr("")
       setLoading(false);

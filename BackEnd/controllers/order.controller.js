@@ -3,6 +3,7 @@ import { Order } from "../models/order.model.js";
 import Shop from "../models/shop.model.js";
 import User from "../models/user.model.js";
 
+
 export const placeOrder = async (req, res) => {
   try {
     const { cartItems, paymentMethod, deliveryAddress, totalAmount } = req.body;
@@ -103,6 +104,7 @@ export const getMyOrders = async (req, res) => {
   }
 };
 
+
 export const updateOrderStatus=async(req,res)=>{
   try {
     const {orderId, shopId}= req.params
@@ -115,7 +117,7 @@ export const updateOrderStatus=async(req,res)=>{
     }
 
     shopOrder.status= status 
-    let deliveryBoyPayLoad=[]
+    let deliveryBoysPayLoad=[]
     if(status=="out of delivery" || !shopOrder.assignment){
       const {latitude, longitude}= order.deliveryAddress
       const nearByDeliveryBoys= await User.find({
@@ -132,6 +134,7 @@ export const updateOrderStatus=async(req,res)=>{
         assignedTO:{$in:nearByIds},
         status:{$nin:["broadcasted","completed"]}
       }).distinct("assignedTo")
+
 
       const busyIdSet= new Set(busyIds.map(id=>String(id)))
       const availableBoys= nearByDeliveryBoys.filter(b=>!busyIdSet.has(String(b._id)))
@@ -150,29 +153,36 @@ export const updateOrderStatus=async(req,res)=>{
         broadCastedTo:candidates,
         status: "broadcasted"
       })
-
+      
       shopOrder.assignedDeliveryBoy= deliveryAssignment.assignedTO
       shopOrder.assignment=deliveryAssignment._id
-      deliveryBoyPayLoad= availableBoys.map(b=>({
+      deliveryBoysPayLoad= availableBoys.map(b=>({
         id:b._id,
         fullName:b.fullName,
         longitude:b.location.coordinates?.[0],
         longitude:b.location.coordinates?.[1],
         mobile: b.mobile
       }))
+      
 
   }
+
+    await order.save()
     await order.populate("shopOrders.shop", "name" )
     await order.populate("shopOrders.assignedDeliveryBoy", "fullName email mobile")
     
+    const updatedShopOrder = order.shopOrders.find(o=>o.shop==shopId)
     
-    await shopOrder.save()
-    await order.save()
-    return res.status(200).json(shopOrder.status)
+    return res.status(200).json({
+      shopOrder:updatedShopOrder,
+      assignedDeliveryBoy: updatedShopOrder?.assignedDeliveryBoy,
+      availableBoys:deliveryBoysPayLoad,
+      assignment:updatedShopOrder?.assignment._id
+
+    })
   } catch (error) {
      return res.status(500).json({message:"update orders status error"});
   }
 }
-
 
 
