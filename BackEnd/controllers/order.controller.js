@@ -166,12 +166,12 @@ export const updateOrderStatus=async(req,res)=>{
       
 
   }
+      const updatedShopOrder = order.shopOrders.find(o=>o.shop==shopId)
+
 
     await order.save()
     await order.populate("shopOrders.shop", "name" )
     await order.populate("shopOrders.assignedDeliveryBoy", "fullName email mobile")
-    
-    const updatedShopOrder = order.shopOrders.find(o=>o.shop==shopId)
     
     return res.status(200).json({
       shopOrder:updatedShopOrder,

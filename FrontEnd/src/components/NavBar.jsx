@@ -97,12 +97,13 @@ function NavBar() {
             </div>
           </>
         : (
-          <><div className="relative cursor-pointer" onClick={()=>navigate("/cart")}>
+          <>
+          {userData.role=="user" && <div className="relative cursor-pointer" onClick={()=>navigate("/cart")}>
             <FaCartShopping size={25} className="text-[#ff4d2d]" />
             <span className="absolute right-[-9px] top-[-12px] text-[#ff4d2d]">
               {cartItems.length}
             </span>
-          </div>
+          </div>}
       
         <button className="hidden md:block px-3 py-1 rounded-lg bg-[#ff4d2d]/10 text-[#ff4d2d] text-sm font-medium" onClick={()=>navigate("/my-orders")}>
           My orders
@@ -117,22 +118,13 @@ function NavBar() {
         >
           {userData?.user.fullName.slice(0, 1)}
         </div>
-        {showInfo && (
-          <div className="fixed top-[80px] right-[10px]  md:right-[10%] lg:right-[20%] w-[180px] bg-white shadow-2xl rounded-xl p-[20px] flex flex-col gap-[10px] z-[9999]">
-            <div className="text-[17px] font-semibold">
-              {userData.user.fullName}
-            </div>
-            {userData?.role=="user" && <div className="md:hidden text-[#ff4d2d] font-semibold cursor-pointer" onClick={()=>navigate("/my-orders")}>
-              My Orders
-            </div>}
-            <div
-              className="text-[#ff4d2d] font-semibold cursor-pointer"
-              onClick={handleLogOut}
-            >
-              Log Out
-            </div>
-          </div>
-        )}
+        {showInfo && <div className={`fixed top-[80px] right-[10px] 
+                    ${userData.role=="deliveryBoy"?"md:right-[20%] lg:right-[40%]":"md:right-[10%] lg:right-[25%]"} w-[180px] bg-white shadow-2xl rounded-xl p-[20px] flex flex-col gap-[10px] z-[9999]`}>
+                    <div className='text-[17px] font-semibold'>{userData.fullName}</div>
+                    {userData.role=="user" && <div className='md:hidden text-[#ff4d2d] font-semibold cursor-pointer' onClick={()=>navigate("/my-orders")}>My Orders</div>}
+                    
+                    <div className='text-[#ff4d2d] font-semibold cursor-pointer' onClick={handleLogOut}>Log Out</div>
+                </div>}
       </div>
     </div>
   );
