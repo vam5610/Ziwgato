@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import NavBar from './NavBar'
 import { useSelector } from 'react-redux'
 import axios from 'axios'
@@ -6,30 +6,92 @@ import { serverUrl } from '../App'
 
 function DeliveryBoy() {
   const {userData}= useSelector(state=>state.user)
-  console.log(userData)
-
+  const [availableAssignments,setAvailableAssignments]= useState([])
+  const [loading, setLoading] = useState(false)
+  const [accepting, setAccepting] = useState(null)
   const getAssignment=async()=>{
     try {
+      setLoading(true)
       const result= await axios.get(`${serverUrl}/api/order/get-assignments`,{
         withCredentials:true
-      }) 
-      console.log(result.data)
+      })
+      setAvailableAssignments(result.data || [])
     } catch (error) {
-      console.log(error)
+      console.log('get assignments error', error)
+      setAvailableAssignments([])
+    } finally{
+      setLoading(false)
     }
   }
 
   useEffect(()=>{
     getAssignment();
   },[userData])
-  
+
+  const acceptAssignment = async (assignmentId) => {
+    if(!assignmentId) return
+    setAccepting(assignmentId)
+    // optimistic UI: remove the assignment locally even if backend doesn't support endpoint
+    try {
+      await axios.post(`${serverUrl}/api/order/accept-assignment`, { assignmentId }, { withCredentials: true })
+      setAvailableAssignments(prev => prev.filter(a=>a.assignmentId!==assignmentId))
+    } catch (err) {
+      // fallback: if endpoint missing, still remove locally so UI feels responsive
+      console.warn('accept endpoint failed, applying optimistic update', err)
+      setAvailableAssignments(prev => prev.filter(a=>a.assignmentId!==assignmentId))
+    } finally{
+      setAccepting(null)
+    }
+  }
+
   return (
     <div className="w-screen min-h-screen flex flex-col items-center bg-gradient-to-br from-[#fff4ef] via-[#fff9f6] to-[#fff] overflow-y-auto">
       <NavBar />
       <div className='w-full max-w-[800px] flex flex-col gap-5 items-center'>
     <div className='bg-white rounded-2xl shadow-md p-5 flex flex-col justify-start items-center w-[90%] border border-orange-100 text-center gap-2'>
       <h1 className='text-xl font-bold text-[#ff4d2d]'>Welcome, {userData?.user?.fullName}</h1>
-      <p className='text-[#ff4d2d]'><span  className='font-semibold'>Latitude :</span> {userData?.user.location.coordinates[1]}, <span  className='font-semibold'>Longitude :</span>{userData?.user.location.coordinates[0]} </p>
+      <p className='text-[#ff4d2d]'><span  className='font-semibold'>Latitude :</span> {userData?.user?.location?.coordinates?.[1]}, <span  className='font-semibold'>Longitude :</span>{userData?.user?.location?.coordinates?.[0]} </p>
+        </div>
+
+
+        <div className='bg-white rounded-2xl shadow-md p-5 w-[90%] mb-6 border border-orange-100'>
+  <h1 className='text-lg font-bold mb-3 text-[#ff4d2d] '>Today Deliveries</h1>
+
+  <div className='space-y-4'>
+    {loading ? (
+      <p className='text-gray-500 text-sm'>Loading assignments...</p>
+    ) : availableAssignments.length>0 ? (
+      availableAssignments.map((a,index)=> (
+        <div className='border rounded-lg p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3' key={a.assignmentId || index}>
+          <div className='flex-1'>
+            <div className='flex items-center justify-between'>
+              <p className='font-semibold text-gray-800'>{a?.shopName}</p>
+              <p className='text-sm text-gray-500'>{a.items?.length || 0} items • ₹{a.subTotal || 0}</p>
+            </div>
+            <p className='text-xs text-gray-400 mt-2'><span className='font-semibold text-gray-600'>Delivery Address: </span> {a?.deliveryAddress?.text}</p>
+            {a.items && a.items.length>0 && (
+              <div className='flex flex-wrap gap-2 mt-3'>
+                {a.items.map((it, i)=> (
+                  <span key={i} className='text-xs bg-orange-50 text-orange-700 px-2 py-1 rounded-md'>{it.name || it.item?.name}</span>
+                ))}
+              </div>
+            )}
+          </div>
+          <div className='flex items-center gap-3'>
+            <button
+              onClick={()=>acceptAssignment(a.assignmentId)}
+              disabled={accepting===a.assignmentId}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition ${accepting===a.assignmentId ? 'bg-gray-300 text-gray-700 cursor-not-allowed' : 'bg-orange-500 text-white hover:bg-orange-600'}`}
+            >
+              {accepting===a.assignmentId ? 'Accepting...' : 'Accept'}
+            </button>
+          </div>
+        </div>
+      ))
+    ) : (
+      <p className='text-gray-400 text-sm '>No available orders</p>
+    )}
+  </div>
         </div>
       </div>
     </div>

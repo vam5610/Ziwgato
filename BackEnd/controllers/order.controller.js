@@ -118,7 +118,7 @@ export const updateOrderStatus=async(req,res)=>{
 
     shopOrder.status= status 
     let deliveryBoysPayLoad=[]
-    if(status=="out of delivery" || !shopOrder.assignment){
+    if(status=="out of delivery" && !shopOrder.assignment){
       const {latitude, longitude}= order.deliveryAddress
       const nearByDeliveryBoys= await User.find({
         role: "deliveryBoy", 
@@ -201,7 +201,7 @@ export const getDeliveryBoyAssignment=async(req,res)=>{
     const formatted= assignment.map(a=>({
       assignmentId: a._id,
       orderId:a.order._id,
-      shopNmae: a.shop.name,
+      shopName: a.shop.name,
       deliveryAddress: a.order.deliveryAddress,
       items: a.order.shopOrders.find(so=>so._id.equals(a.shopOrderId)).shopOrderItem || [],
       subTotal: a.order.shopOrders.find(so=>so._id.equals(a.shopOrderId))?.subTotal
