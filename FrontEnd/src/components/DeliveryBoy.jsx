@@ -9,6 +9,9 @@ function DeliveryBoy() {
   const [availableAssignments,setAvailableAssignments]= useState([])
   const [loading, setLoading] = useState(false)
   const [accepting, setAccepting] = useState(null)
+
+
+
   const getAssignment=async()=>{
     try {
       setLoading(true)
@@ -24,25 +27,23 @@ function DeliveryBoy() {
     }
   }
 
+
+  const acceptOrder= async(assignmentId)=>{
+    try {
+      const result= await axios.get(`${serverUrl}/api/order/accept-order/${assignmentId}`,{
+        withCredentials:true,
+      })
+      console.log('accept order result', result.data)
+    } catch (error) {
+      console.log(error)      
+    }
+  }
+
   useEffect(()=>{
     getAssignment();
   },[userData])
 
-  const acceptAssignment = async (assignmentId) => {
-    if(!assignmentId) return
-    setAccepting(assignmentId)
-    // optimistic UI: remove the assignment locally even if backend doesn't support endpoint
-    try {
-      await axios.post(`${serverUrl}/api/order/accept-assignment`, { assignmentId }, { withCredentials: true })
-      setAvailableAssignments(prev => prev.filter(a=>a.assignmentId!==assignmentId))
-    } catch (err) {
-      // fallback: if endpoint missing, still remove locally so UI feels responsive
-      console.warn('accept endpoint failed, applying optimistic update', err)
-      setAvailableAssignments(prev => prev.filter(a=>a.assignmentId!==assignmentId))
-    } finally{
-      setAccepting(null)
-    }
-  }
+ 
 
   return (
     <div className="w-screen min-h-screen flex flex-col items-center bg-gradient-to-br from-[#fff4ef] via-[#fff9f6] to-[#fff] overflow-y-auto">
@@ -79,7 +80,7 @@ function DeliveryBoy() {
           </div>
           <div className='flex items-center gap-3'>
             <button
-              onClick={()=>acceptAssignment(a.assignmentId)}
+              onClick={()=>acceptOrder(a.assignmentId)}
               disabled={accepting===a.assignmentId}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition ${accepting===a.assignmentId ? 'bg-gray-300 text-gray-700 cursor-not-allowed' : 'bg-orange-500 text-white hover:bg-orange-600'}`}
             >
