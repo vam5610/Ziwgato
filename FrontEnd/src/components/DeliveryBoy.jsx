@@ -18,6 +18,7 @@ function DeliveryBoy() {
       const result= await axios.get(`${serverUrl}/api/order/get-assignments`,{
         withCredentials:true
       })
+      console.log("get assignamet",result.data)
       setAvailableAssignments(result.data || [])
     } catch (error) {
       console.log('get assignments error', error)
@@ -84,7 +85,7 @@ function DeliveryBoy() {
               disabled={accepting===a.assignmentId}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition ${accepting===a.assignmentId ? 'bg-gray-300 text-gray-700 cursor-not-allowed' : 'bg-orange-500 text-white hover:bg-orange-600'}`}
             >
-              {accepting===a.assignmentId ? 'Accepting...' : 'Accept'}
+             Accept
             </button>
           </div>
         </div>

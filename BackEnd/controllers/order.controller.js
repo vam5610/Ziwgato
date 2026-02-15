@@ -87,7 +87,8 @@ export const getMyOrders = async (req, res) => {
         .sort({ createdAt: -1 })
         .populate("shopOrders.shop", "name")
         .populate("user")
-        .populate("shopOrders.shopOrderItem.item", "name image price");
+        .populate("shopOrders.shopOrderItem.item", "name image price")
+        .populate("shopOrders.assignedDeliveryBoy", "fullNam mobile")
          
         const filteredOrder = orders.map((order)=>({
           _id: order._id,
@@ -110,7 +111,7 @@ export const updateOrderStatus=async(req,res)=>{
     const {orderId, shopId}= req.params
     const {status} = req.body 
     const order= await Order.findById(orderId);
-    const shopOrder=  order.shopOrders.find(o=>String(o.shop)===String(shopId))
+    const shopOrder=  order.shopOrders.find(o=>o.shop== shopId)
     if(!shopOrder){
       return res.status(400).json({message: "Shop order not found"})
 
@@ -133,7 +134,7 @@ export const updateOrderStatus=async(req,res)=>{
       const busyIds= await DeliveryAssignment.find({
         assignedTO:{$in:nearByIds},
         status:{$nin:["broadcasted","completed"]}
-      }).distinct("assignedTO")
+      }).distinct("assignedTo")
 
 
       const busyIdSet= new Set(busyIds.map(id=>String(id)))
@@ -160,13 +161,13 @@ export const updateOrderStatus=async(req,res)=>{
         id:b._id,
         fullName:b.fullName,
         longitude:b.location.coordinates?.[0],
-        latitude:b.location.coordinates?.[1],
+        longitude:b.location.coordinates?.[1],
         mobile: b.mobile
       }))
       
 
   }
-      const updatedShopOrder = order.shopOrders.find(o=>String(o.shop)===String(shopId))
+      const updatedShopOrder = order.shopOrders.find(o=>o.shop==shopId)
 
 
     await order.save()
@@ -177,7 +178,7 @@ export const updateOrderStatus=async(req,res)=>{
       shopOrder:updatedShopOrder,
       assignedDeliveryBoy: updatedShopOrder?.assignedDeliveryBoy,
       availableBoys:deliveryBoysPayLoad,
-      assignment:updatedShopOrder?.assignment
+      assignment:updatedShopOrder?.assignment._id
 
     })
   } catch (error) {
@@ -242,7 +243,7 @@ export const acceptOrder=async(req,res)=>{
       return res.status(404).json({message:"Order not found"})
     }
 
-    const shopOrder= order.shopOrders.find(so=>so._id.equals(assignment.shopOrderId))
+    const shopOrder= order.shopOrders.id(assignment.shopOrderId)
 
     shopOrder.assignedDeliveryBoy= req.userId
 

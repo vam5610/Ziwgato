@@ -9,6 +9,7 @@ import { useState } from "react";
 function OwnerOrderCard({ data }) {
   const dispatch= useDispatch()
   const [availableBoys,setAvailableBoys]= useState([])
+  console.log("data",data.shopOrder?.assignedDeliveryBoy)
 
   const handleUpdateStatus=async(orderId,shopId,status)=>{
     try {
@@ -16,13 +17,11 @@ function OwnerOrderCard({ data }) {
       dispatch(updateOrderStatus({orderId,shopId,status}))
       setAvailableBoys(result.data.availableBoys)
       console.log(result.data)
-      
     } catch (error) {
-      console.log(error)
+      console.log(error);
     }
+    
   }
-
-
   return (
     <div className="bg-white rounded-lg shadow p-4 m-6 space-y-4">
       <div>
@@ -98,7 +97,7 @@ function OwnerOrderCard({ data }) {
     availableBoys.map((b,index)=>(
       <div key={index} className="text-gray-600">{b.fullName} - {b.mobile}</div>
     ))
-  ): <div>Waiting for available boys</div>}
+  ): data.shopOrder?.assignedDeliveryBoy? <div>{data.shopOrder.assignedDeliveryBoy.fullName}</div> :<div>Waiting for available boys</div>}
   </div>}
 <div className='text-right font-bold text-gray-800 text-sm'>
   Total: ₹{data.shopOrders.subTotal}
