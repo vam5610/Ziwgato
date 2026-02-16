@@ -9,8 +9,7 @@ import { useState } from "react";
 function OwnerOrderCard({ data }) {
   const dispatch= useDispatch()
   const [availableBoys,setAvailableBoys]= useState([])
-  console.log("data",data.shopOrder?.assignedDeliveryBoy)
-
+  //console.log("data", data.shopOrders?.assignedDeliveryBoy?.fullName)
   const handleUpdateStatus=async(orderId,shopId,status)=>{
     try {
       const result= await axios.post(`${serverUrl}/api/order/update-status/${orderId}/${shopId}`,{status},{withCredentials:true})
@@ -91,12 +90,17 @@ function OwnerOrderCard({ data }) {
 </div>
 {data.shopOrders.status=="out of delivery" && 
 <div className="mt-3 p-2 border rounded-lg   bg-orange-50 text-sm ">
-  <p>Available Boys</p>
+  {data.shopOrders.assignedDeliveryBoy ? (
+    <div className="text-gray-600">{data.shopOrders.assignedDeliveryBoy.fullName} - {data.shopOrders.assignedDeliveryBoy.mobile}</div>
+  ) : availableBoys.length>0? (
+     <div>
+      <p className="text-gray-600">Available Delivery Boys:</p> </div>
+   ) : null}
   {availableBoys.length>0?(
     availableBoys.map((b,index)=>(
       <div key={index} className="text-gray-600">{b.fullName} - {b.mobile}</div>
     ))
-  ): data.shopOrder?.assignedDeliveryBoy? <div>{data.shopOrder.assignedDeliveryBoy.fullName}</div> :<div>Waiting for available boys</div>}
+  ): data.shopOrders?.assignedDeliveryBoy ? <div>{data.shopOrders.assignedDeliveryBoy.fullName}</div> : <div>Waiting for available boys</div>}
   </div>}
 <div className='text-right font-bold text-gray-800 text-sm'>
   Total: ₹{data.shopOrders.subTotal}

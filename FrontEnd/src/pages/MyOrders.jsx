@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 
 function MyOrders() {
   const { userData, myOrders } = useSelector((state) => state.user);
+  console.log("userData",userData?.user.role)
   const navigate = useNavigate();
  
   return (

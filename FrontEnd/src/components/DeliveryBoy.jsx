@@ -10,7 +10,15 @@ function DeliveryBoy() {
   const [loading, setLoading] = useState(false)
   const [accepting, setAccepting] = useState(null)
 
-
+  const getCurrentOrder= async()=>{
+    try {
+      const result= await axios.get(`${serverUrl}/api/order/get-current-order`,{
+        withCredentials:true 
+      })
+    } catch (error) {
+      console.log(error)
+    }
+  }
 
   const getAssignment=async()=>{
     try {
@@ -34,6 +42,7 @@ function DeliveryBoy() {
       const result= await axios.get(`${serverUrl}/api/order/accept-order/${assignmentId}`,{
         withCredentials:true,
       })
+      await getCurrentOrder();
       console.log('accept order result', result.data)
     } catch (error) {
       console.log(error)      
@@ -42,6 +51,7 @@ function DeliveryBoy() {
 
   useEffect(()=>{
     getAssignment();
+    getCurrentOrder();
   },[userData])
 
  
