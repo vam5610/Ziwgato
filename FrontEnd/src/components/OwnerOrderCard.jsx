@@ -20,7 +20,6 @@ function OwnerOrderCard({ data }) {
     } catch (error) {
       console.log(error);
     }
-    
   }
   return (
     <div className="bg-white rounded-lg shadow p-4 m-6 space-y-4">
