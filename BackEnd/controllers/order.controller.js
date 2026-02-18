@@ -266,20 +266,21 @@ export const acceptOrder=async(req,res)=>{
 
 export const getCurrentOrder = async(req,res)=>{
   try {
+    
     const assignment = await DeliveryAssignment.findOne({
       assignedTO: req.userId,
       status: "assigned",
     })
       .populate("shop", "name")
-      .populate("assignedTO", "fullName mobile email location")
+      .populate("assignedTO", "fullName email mobile location")
       .populate({
         path: "order",
         populate: [
           { path: "user", select: "fullName email location mobile" },
-          { path: "shopOrders.shop", select: "name" },
-          { path: "shopOrders.shopOrderItem.item", select: "name image price" },
+
         ],
       });
+      
     if(!assignment){
       return res.status(404).json({message:"No current order found"})
     }

@@ -9,12 +9,15 @@ function DeliveryBoy() {
   const [availableAssignments,setAvailableAssignments]= useState([])
   const [loading, setLoading] = useState(false)
   const [accepting, setAccepting] = useState(null)
-
+  const [currentOrder, setCurrentOrder] = useState(null)
+  
   const getCurrentOrder= async()=>{
     try {
       const result= await axios.get(`${serverUrl}/api/order/get-current-order`,{
         withCredentials:true 
       })
+      console.log("current order", result.data)
+      setCurrentOrder(result.data)
     } catch (error) {
       console.log(error)
     }
@@ -65,9 +68,10 @@ function DeliveryBoy() {
       <p className='text-[#ff4d2d]'><span  className='font-semibold'>Latitude :</span> {userData?.user?.location?.coordinates?.[1]}, <span  className='font-semibold'>Longitude :</span>{userData?.user?.location?.coordinates?.[0]} </p>
         </div>
 
-
-        <div className='bg-white rounded-2xl shadow-md p-5 w-[90%] mb-6 border border-orange-100'>
+{!currentOrder &&<div className='bg-white rounded-2xl shadow-md p-5 w-[90%] mb-6 border border-orange-100'>
   <h1 className='text-lg font-bold mb-3 text-[#ff4d2d] '>Today Deliveries</h1>
+
+  
 
   <div className='space-y-4'>
     {loading ? (
@@ -104,7 +108,17 @@ function DeliveryBoy() {
       <p className='text-gray-400 text-sm '>No available orders</p>
     )}
   </div>
-        </div>
+        </div> }
+
+       {currentOrder && <div className='bg-white rounded-2xl p-5 shadow-md w-[90%] border border-orange-100'>
+<h2 className='text-lg font-bold mb-3'>📦Current Order</h2>
+<div className='border rounded-lg p-4 mb-3'>
+  <p className='font-semibold text-sm'>{currentOrder?.shopOrder.shop.name}</p>
+  <p className='text-sm text-gray-500'>{currentOrder.deliveryAddress.text}</p>
+ <p className='text-xs text-gray-400'>{currentOrder.shopOrder?.shopOrderItem?.length} items | {currentOrder.shopOrder.subTotal}</p>
+</div>
+</div>} 
+        
       </div>
     </div>
   )

@@ -17,12 +17,12 @@ const deliveryAssignmentSchema = new mongoose.Schema(
     broadCastedTo: [
       { 
         type: mongoose.Schema.Types.ObjectId,
-        ref: "user",
+        ref: "User",
       },
     ],
     assignedTO: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "user",
+      ref: "User",
       default:null
     },
     status:{
