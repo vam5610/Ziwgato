@@ -275,7 +275,8 @@ export const getCurrentOrder = async (req, res) => {
       assignedTO: req.userId,
       status: "assigned",
     })
-      .populate("shop", "name") // assignment level shop
+      .populate("shop", "name")  // assignment level shop
+      .populate("assignedTO", "fullName email mobile location")
 
 .populate({
   path: "order",
@@ -288,8 +289,6 @@ export const getCurrentOrder = async (req, res) => {
   ],
 })
 
-
-      console.log("assignment.shop:", assignment.shop);
 
 
     if (!assignment) {
@@ -330,5 +329,23 @@ export const getCurrentOrder = async (req, res) => {
     });
   } catch (error) {
     return res.status(500).json({ message: "Get current order error" });
+  }
+};
+
+
+
+
+export const getOrderById = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const order = await Order.findById(orderId)
+      .populate("shopOrders.shop")
+      .populate("shopOrders.assignedDeliveryBoy");
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+    return res.status(200).json(order);
+  } catch (error) {
+    return res.status(500).json({ message: "Get order by id error" });
   }
 };

@@ -1,4 +1,5 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 
 function UserOrderCard({ data }) {
   const formatDate = (dateString) => {
@@ -44,6 +45,8 @@ function UserOrderCard({ data }) {
         return "💰";
     }
   };
+
+  const navigate= useNavigate();
 
   return (
     <div className="mx-6 my-5 group">
@@ -139,7 +142,7 @@ function UserOrderCard({ data }) {
 
           <button
             onClick={() => console.log("Track order:", data._id)}
-            className="px-7 py-3 bg-gradient-to-r from-[#ff4d2d] to-orange-600 text-white font-bold rounded-xl hover:from-orange-600 hover:to-red-600 hover:shadow-xl transform hover:scale-105 active:scale-95 transition-all duration-200 flex items-center gap-2 group/btn"
+            className="px-7 py-3 bg-gradient-to-r from-[#ff4d2d] to-orange-600 text-white font-bold rounded-xl hover:from-orange-600 hover:to-red-600 hover:shadow-xl transform hover:scale-105 active:scale-95 transition-all duration-200 flex items-center gap-2 group/btn" onClickCapture={()=>navigate(`/track-order/${data._id}`)}
           >
             <span className="group-hover/btn:translate-x-1 transition-transform">📍</span>
             Track Order
