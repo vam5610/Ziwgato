@@ -1,30 +1,110 @@
-import axios from 'axios';
-import React, { useEffect } from 'react'
-import { useParams } from 'react-router-dom'
-import { serverUrl } from '../App';
+import axios from "axios";
+import React, { useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { serverUrl } from "../App";
+import { useState } from "react";
+import { IoIosArrowRoundBack } from "react-icons/io";
+import DeliveryBoyTracking from "./DeliveryBoyTracking";
 
 function TrackOrder() {
+  const { orderId } = useParams();
+  const [currentOrder, setCurrentOrder] = useState();
+  const navigate = useNavigate();
 
-  const {orderId}= useParams();
-  const handleGetOrder= async()=>{
+  const handleGetOrder = async () => {
     try {
-      const result= await axios.get(`${serverUrl}/api/order/get-order-by-id/${orderId}`,{
-        withCredentials:true
-      })
-      console.log("first", result.data)
-    } catch (error) {
-      
-    }
-  }
+      const result = await axios.get(
+        `${serverUrl}/api/order/get-order-by-id/${orderId}`,
+        {
+          withCredentials: true,
+        },
+      );
+      console.log("first", result.data);
+      setCurrentOrder(result.data);
+    } catch (error) {}
+  };
 
-  useEffect(()=>{
+  useEffect(() => {
     handleGetOrder();
-  },[orderId])
+  }, [orderId]);
   return (
-    <div>
-      
+    <div className="max-w-4xl mx-auto p-4 flex flex-col gap-6">
+      <div
+        onClick={() => navigate("/")}
+        className="relative top-6 left-6 cursor-pointer"
+      >
+        <IoIosArrowRoundBack
+          size={38}
+          className="text-[#ff4d2d] hover:scale-110 transition"
+        />
+        <h1 className="text-2xl font-bold md:text-center">Track Order</h1>
+      </div>
+      {currentOrder?.shopOrders?.map((shopOrder, index) => (
+        <div
+          className="bg-white p-4 rounded-2xl shadow-md border border-orange-100 space-y-4"
+          key={index}
+        >
+          <div>
+            <p className="text-lg font-bold mb-2 text-[#ff4d2d]">
+              {" "}
+              {shopOrder?.shop?.name}
+            </p>
+            <p className="font-semibold">
+              <span>Items:</span>
+              {shopOrder.shopOrderItem?.map((i) => i.name)}
+            </p>
+            <p>
+              <span className="font-semibold">Sub Total:</span>
+              {shopOrder?.subTotal}
+            </p>
+            <p className="mt-6 ">
+              <span className="font-semibold">Delivery Address: </span>
+              {currentOrder.deliveryAddress?.text}
+            </p>
+          </div>
+          {shopOrder.status != "delivered" ? (
+            <>
+              <h2>Delivery Boy</h2>
+              {shopOrder.assignedDeliveryBoy ? (
+                <div className="text-sm text-gray-700">
+                  <p className="font-semibold">
+                    {" "}
+                    <span>Name: </span>
+                    {shopOrder.assignedDeliveryBoy.fullName}
+                  </p>
+                  <p className="font-semibold">
+                    {" "}
+                    <span>Mobile: </span> {shopOrder.assignedDeliveryBoy.mobile}
+                  </p>
+                </div>
+              ) : (
+                <p className="font-semibold">Delivery Boy not assigned yet.</p>
+              )}
+            </>
+          ) : (
+            <p className="text-green-600 font-semibold text-lg ">Delivered</p>
+          )}
+
+          {shopOrder.assignedDeliveryBoy && (
+            <div className="h-[400px] w-full rounded-2xl overflow-hidden shadow-md">
+            <DeliveryBoyTracking
+              data={{
+                deliveryBoyLocation: {
+                  lat: shopOrder.assignedDeliveryBoy.location.coordinates[1],
+                  lon: shopOrder.assignedDeliveryBoy.location.coordinates[0],
+                },
+                customerLocation: {
+                  lat: currentOrder.deliveryAddress.latitude,
+                  lon: currentOrder.deliveryAddress.longitude,
+                }
+              }}
+            />
+            </div>
+          )}
+        </div>
+      ))}
     </div>
-  )
+  );
 }
 
-export default TrackOrder
+export default TrackOrder;
