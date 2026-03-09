@@ -2,6 +2,7 @@ import DeliveryAssignment from "../models/deliveryAssignment.model.js";
 import { Order } from "../models/order.model.js";
 import Shop from "../models/shop.model.js";
 import User from "../models/user.model.js";
+import { sendDeliveryOtpMail } from "../utils/mail.js";
 
 export const placeOrder = async (req, res) => {
   try {
@@ -361,3 +362,51 @@ export const getOrderById = async (req, res) => {
     return res.status(500).json({ message: "Get order by id error" });
   }
 };
+
+export const sendDeliveryOtp= async(req,res)=>{
+  try {
+    const {orderId,shopOrderId}= req.params;
+    console.log("orderid", orderId);
+    const order= await Order.findById(orderId).populate("user");
+    const shopOrder= order.shopOrders.id(shopOrderId);
+    
+    if(!order || !shopOrder){
+      return res.status(404).json({message:"Order or shop order not found"})
+    }
+    const otp = Math.floor(1000 + Math.random() * 9000).toString();
+    shopOrder.deliveryOtp= otp;
+    shopOrder.otpExpires= Date.now() + 5*60*1000;
+    await order.save();
+    await sendDeliveryOtpMail(order.user,otp);
+    return res.status(200).json({message:`OTP sent Successfully to ${order.user.fullName}`})
+  } catch (error) {
+    return res.status(500).json({message:"Error sending delivery OTP"})
+  }
+}
+
+
+export const verifyDeliveryOtp= async(req,res)=>{
+  try {
+    const {orderId,shopOrderId}= req.params;
+    const order= await Order.findById(orderId).populate("user");
+    const shopOrder= order.shopOrders.id(shopOrderId);
+    if(!order || !shopOrder){
+      return res.status(404).json({message:"Order or shop order not found"})
+    }
+    if(shopOrder.deliveryOtp!== otp || !shopOrder.otpExpires || shopOrder.otpExpires < Date.now()){
+      return res.status(400).json({message:"Invalid or expired OTP"})   
+    }
+    shopOrder.status="delivered";
+    shopOrder.deliveredAt=  Date.now();
+    await order.save()
+    await DeliveryAssignment.deleteOne({
+      shopOrderId,
+      order: order._id,
+      assignedTO:shopOrder.assignedDeliveryBoy 
+    })
+
+    return res.status(200).json({message:"Order marked as delivered successfully"})
+  } catch (error) {
+    
+  }
+}
