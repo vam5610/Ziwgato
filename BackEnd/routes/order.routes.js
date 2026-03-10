@@ -7,8 +7,8 @@ const orderRouter= express.Router()
 orderRouter.post("/place-order",isAuth,placeOrder);
 orderRouter.get("/my-orders",isAuth,getMyOrders);
 orderRouter.get("/get-assignments",isAuth,getDeliveryBoyAssignment);
-orderRouter.post("/send-delivery-otp",isAuth,sendDeliveryOtp);
-orderRouter.post("/verify-delivery-otp",isAuth,verifyDeliveryOtp);
+orderRouter.post("/send-delivery-otp/:orderId/:shopOrderId",isAuth,sendDeliveryOtp);
+orderRouter.post("/verify-delivery-otp/:orderId/:shopOrderId",isAuth,verifyDeliveryOtp);
 orderRouter.post("/update-status/:orderId/:shopId",isAuth,updateOrderStatus);
 
 orderRouter.get("/accept-order/:assignmentId",isAuth,acceptOrder);

@@ -366,28 +366,41 @@ export const getOrderById = async (req, res) => {
 export const sendDeliveryOtp= async(req,res)=>{
   try {
     const {orderId,shopOrderId}= req.params;
-    console.log("orderid", orderId);
-    const order= await Order.findById(orderId).populate("user");
-    const shopOrder= order.shopOrders.id(shopOrderId);
-    
+    const order = await Order.findById(orderId).populate("user");
+
+if(!order){
+  return res.status(404).json({message:"Order not found"})
+}
+
+const shopOrder = order.shopOrders.id(shopOrderId);
+
+if(!shopOrder){
+  return res.status(404).json({message:"Shop order not found"})
+}
     if(!order || !shopOrder){
       return res.status(404).json({message:"Order or shop order not found"})
     }
+    
     const otp = Math.floor(1000 + Math.random() * 9000).toString();
     shopOrder.deliveryOtp= otp;
     shopOrder.otpExpires= Date.now() + 5*60*1000;
+    if(!order.user?.email){
+  return res.status(400).json({message:"User email not found"});
+}
     await order.save();
-    await sendDeliveryOtpMail(order.user,otp);
-    return res.status(200).json({message:`OTP sent Successfully to ${order.user.fullName}`})
+    await sendDeliveryOtpMail(order.user.email,otp);
+    return res.status(200).json({message:`OTP sent Successfully to ${order?.user?.fullName}`})
   } catch (error) {
-    return res.status(500).json({message:"Error sending for the delivery OTP"})
-  }
+  console.log("SEND OTP ERROR:", error);
+  return res.status(500).json({message:"Error sending for the delivery OTP"})
+}
 }
 
 
 export const verifyDeliveryOtp= async(req,res)=>{
   try {
     const {orderId,shopOrderId}= req.params;
+    const { otp } = req.body;
     const order= await Order.findById(orderId).populate("user");
     const shopOrder= order.shopOrders.id(shopOrderId);
     if(!order || !shopOrder){
@@ -396,6 +409,8 @@ export const verifyDeliveryOtp= async(req,res)=>{
     if(shopOrder.deliveryOtp!== otp || !shopOrder.otpExpires || shopOrder.otpExpires < Date.now()){
       return res.status(400).json({message:"Invalid or expired OTP"})   
     }
+    console.log("Stored OTP:", shopOrder.deliveryOtp);
+console.log("Entered OTP:", otp);
     shopOrder.status="delivered";
     shopOrder.deliveredAt=  Date.now();
     await order.save()
@@ -407,6 +422,6 @@ export const verifyDeliveryOtp= async(req,res)=>{
 
     return res.status(200).json({message:"Order marked as delivered successfully"})
   } catch (error) {
-    
+    return res.status(500).json({message:"Error verifying delivery OTP"})
   }
 }

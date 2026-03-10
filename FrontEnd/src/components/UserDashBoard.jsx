@@ -20,6 +20,20 @@ function UserDashBoard() {
 
   const { currentCity, shopsInMyCity,itemsInMyCity } = useSelector((state) => state.user);
 
+  const [updatedItemsList,setUpdatedItmesList]= useState([])  
+
+  const handleByFilter=()=>{
+    if(category==="All"){
+      setUpdatedItmesList(itemsInMyCity);
+    }else{
+      const filteredList= itemsInMyCity?.filter(i=>i.category === category);
+      setUpdatedItmesList(filteredList);
+    }
+  }
+
+  useEffect(()=>{
+    setUpdatedItmesList(itemsInMyCity)
+  },[itemsInMyCity])
 
   
 
@@ -115,6 +129,7 @@ function UserDashBoard() {
               key={index}
               name={cate.category}
               image={cate.image}
+              onClick={()=>handleByFilter(cate.category)}
             />
           ))}
         </div>
@@ -177,7 +192,7 @@ function UserDashBoard() {
       </h1>
 
       <div className="w-full flex flex-wrap gap-8 justify-center sm:justify-start">
-        {itemsInMyCity?.map((item, index) => (
+        {updatedItemsList?.map((item, index) => (
           <div
             key={index}
             className="transform hover:scale-105 transition duration-300"
