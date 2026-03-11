@@ -24,7 +24,7 @@ function CheckOut() {
   const dispatch = useDispatch();
   const [addressInput, setAddressInput] = useState("");
   const apikey = import.meta.env.VITE_GEOAPIKEY;
-  const { cartItems, totalAmount } = useSelector((state) => state.user);
+  const { cartItems, totalAmount,userData } = useSelector((state) => state.user);
 
   const [paymentMethod, setPaymentMethod] = useState("cod");
   const delivery = totalAmount > 500 ? 0 : 40;
@@ -54,6 +54,7 @@ function CheckOut() {
       console.log(error);
     }
   };
+  console.log("userData", userData)
 
   const handlePlaceOrder= async()=>{
     try {
@@ -83,12 +84,12 @@ function CheckOut() {
   }
 
   const currentLocation = () => {
-    navigator.geolocation.getCurrentPosition(async (postion) => {
-      const latitude = postion.coords.latitude;
-      const longitude = postion.coords.longitude;
+    
+     const latitude= userData.user?.location.coordinates[1];
+      const longitude= userData.user?.location.coordinates[0];
       dispatch(setLocation({ lat: latitude, lon: longitude }));
       getAddressByLatLng(latitude, longitude);
-    });
+    
   };
 
   const getLatLngByAddress = async () => {
