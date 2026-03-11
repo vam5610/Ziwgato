@@ -130,3 +130,53 @@ export const getItemByCity = async (req, res) => {
     return res.status(500).json({ message: `getItemByCity error ${error.message}` });
   }
 };
+
+
+export const getItemByShop= async(req,res)=>{
+  try {
+    const {shopId}= req.params;
+    if(!shopId){
+      return res.status(400).json({message:"Shop ID is required"});
+    }
+
+    const shop = await Shop.findById(shopId).populate("items")
+    if(!shop){
+      return res.status(404).json({message:"Shop not found"});
+    }
+
+    return res.status(200).json({shop, items:shop.items});
+
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+}
+
+
+export const searchItems= async(req,res)=>{
+  try {
+    const {query,city}= req.query;
+    if(!query || !city){
+      return res.status(400).json({message:"Query and city are required"});
+    }
+    const shops = await Shop.find({
+      city: { $regex: new RegExp(`^${city}$`, "i") },
+    }).populate("items");
+
+    if(!shops || shops.length===0){
+      return res.status(404).json({message:"No shops found in this city"});
+    }
+
+    const shopIds= shops.map((s)=>s._id)
+    const items= await Item.find({
+      shop: {$in: shopIds},
+      $or:[
+        {name: {$regex: new RegExp(query, "i")}},
+        {category: {$regex: new RegExp(query, "i")}},
+        {foodType: {$regex: new RegExp(query, "i")}}
+      ]
+    }).populate("shop", "name image");
+    return res.status(200).json(items);
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+}
