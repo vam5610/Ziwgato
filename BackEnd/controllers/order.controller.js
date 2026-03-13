@@ -3,7 +3,15 @@ import { Order } from "../models/order.model.js";
 import Shop from "../models/shop.model.js";
 import User from "../models/user.model.js";
 import { sendDeliveryOtpMail } from "../utils/mail.js";
+import Razorpay from "razorpay";
+import dotenv from "dotenv";
 
+dotenv.config();
+
+let instance = new Razorpay({
+  key_id:process.env.RAZORPAY_KEY_ID,
+  key_secret:process.env.RAZORPAY_KEY_SECRET,
+});
 export const placeOrder = async (req, res) => {
   try {
     const { cartItems, paymentMethod, deliveryAddress, totalAmount } = req.body;
@@ -55,6 +63,29 @@ export const placeOrder = async (req, res) => {
       }),
     );
 
+    if(paymentMethod=="online"){
+      const razorOrder= await instance.orders.create({
+        amount: Math.round(totalAmount*100),
+        currency: 'INR',
+        receipt:`receipt_${Date.now()}`
+      })
+
+      const newOrder = await Order.create({
+      user: req.userId,
+      paymentMethod,
+      deliveryAddress,
+      totalAmount,
+      shopOrders,
+      razorpayOrderId: razorOrder.id,
+      payment:false
+    });
+    return res.status(200).json({
+      razorOrder,
+      orderId: newOrder._id,
+
+    })
+    }
+
     const newOrder = await Order.create({
       user: req.userId,
       paymentMethod,
@@ -72,6 +103,37 @@ export const placeOrder = async (req, res) => {
     return res.status(500).json({ message: `place order error ${error}` });
   }
 };
+
+
+export const verifyPayment= async(req,res)=>{
+  try {
+    const {razorpay_payment_id, orderId}= req.body;
+    const payment= await instance.payments.fetch(razorpay_payment_id);
+    if(!payment || payment.status!="captured"){
+       return res.status(400).json({message:"Payment not caputred"})
+    }
+    const order= await Order.findById(orderId)
+    if(!order){
+      return res.status(400).json({message:"order not found"})
+    }
+    order.payment= true;
+    order.razorpayPaymentId= razorpay_payment_id
+    await order.save();
+
+    await order.populate(
+      "shopOrders.shopOrderItem.item",
+      "name image price",
+    );
+    await order.populate("shopOrders.shop", "name");
+
+   return res.status(200).json(order);
+
+
+
+  } catch (error) {
+    return res.status(500).json({message: `verify payment order error ${error}`})
+  }
+}
 
 export const getMyOrders = async (req, res) => {
   try {
@@ -276,21 +338,19 @@ export const getCurrentOrder = async (req, res) => {
       assignedTO: req.userId,
       status: "assigned",
     })
-      .populate("shop", "name")  // assignment level shop
+      .populate("shop", "name") // assignment level shop
       .populate("assignedTO", "fullName email mobile location")
 
-.populate({
-  path: "order",
-  populate: [
-    { path: "user", select: "fullName email location mobile" },
-    {
-      path: "shopOrders.shop",
-      select: "name"
-    }
-  ],
-})
-
-
+      .populate({
+        path: "order",
+        populate: [
+          { path: "user", select: "fullName email location mobile" },
+          {
+            path: "shopOrders.shop",
+            select: "name",
+          },
+        ],
+      });
 
     if (!assignment) {
       return res.status(404).json({ message: "No current order found" });
@@ -333,27 +393,24 @@ export const getCurrentOrder = async (req, res) => {
   }
 };
 
-
-
-
 export const getOrderById = async (req, res) => {
   try {
     const { orderId } = req.params;
     const order = await Order.findById(orderId)
       .populate("user")
       .populate({
-        path:"shopOrders.shop",
-        model:"Shop",
+        path: "shopOrders.shop",
+        model: "Shop",
       })
       .populate({
         path: "shopOrders.assignedDeliveryBoy",
-        model:"User"
+        model: "User",
       })
       .populate({
-        path:"shopOrders.shopOrderItem.item",
-        model:"Item"
+        path: "shopOrders.shopOrderItem.item",
+        model: "Item",
       })
-      .lean()
+      .lean();
     if (!order) {
       return res.status(404).json({ message: "Order not found" });
     }
@@ -363,65 +420,74 @@ export const getOrderById = async (req, res) => {
   }
 };
 
-export const sendDeliveryOtp= async(req,res)=>{
+export const sendDeliveryOtp = async (req, res) => {
   try {
-    const {orderId,shopOrderId}= req.params;
+    const { orderId, shopOrderId } = req.params;
     const order = await Order.findById(orderId).populate("user");
 
-if(!order){
-  return res.status(404).json({message:"Order not found"})
-}
-
-const shopOrder = order.shopOrders.id(shopOrderId);
-
-if(!shopOrder){
-  return res.status(404).json({message:"Shop order not found"})
-}
-    if(!order || !shopOrder){
-      return res.status(404).json({message:"Order or shop order not found"})
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
     }
-    
+
+    const shopOrder = order.shopOrders.id(shopOrderId);
+
+    if (!shopOrder) {
+      return res.status(404).json({ message: "Shop order not found" });
+    }
+    if (!order || !shopOrder) {
+      return res.status(404).json({ message: "Order or shop order not found" });
+    }
+
     const otp = Math.floor(1000 + Math.random() * 9000).toString();
-    shopOrder.deliveryOtp= otp;
-    shopOrder.otpExpires= Date.now() + 5*60*1000;
-    if(!order.user?.email){
-  return res.status(400).json({message:"User email not found"});
-}
-    await order.save();
-    await sendDeliveryOtpMail(order.user.email,otp);
-    return res.status(200).json({message:`OTP sent Successfully to ${order?.user?.fullName}`})
-  } catch (error) {
-  console.log("SEND OTP ERROR:", error);
-  return res.status(500).json({message:"Error sending for the delivery OTP"})
-}
-}
-
-
-export const verifyDeliveryOtp= async(req,res)=>{
-  try {
-    const {orderId,shopOrderId}= req.params;
-    const { otp } = req.body;
-    const order= await Order.findById(orderId).populate("user");
-    const shopOrder= order.shopOrders.id(shopOrderId);
-    if(!order || !shopOrder){
-      return res.status(404).json({message:"Order or shop order not found"})
+    shopOrder.deliveryOtp = otp;
+    shopOrder.otpExpires = Date.now() + 5 * 60 * 1000;
+    if (!order.user?.email) {
+      return res.status(400).json({ message: "User email not found" });
     }
-    if(shopOrder.deliveryOtp!== otp || !shopOrder.otpExpires || shopOrder.otpExpires < Date.now()){
-      return res.status(400).json({message:"Invalid or expired OTP"})   
+    await order.save();
+    await sendDeliveryOtpMail(order.user.email, otp);
+    return res
+      .status(200)
+      .json({ message: `OTP sent Successfully to ${order?.user?.fullName}` });
+  } catch (error) {
+    console.log("SEND OTP ERROR:", error);
+    return res
+      .status(500)
+      .json({ message: "Error sending for the delivery OTP" });
+  }
+};
+
+export const verifyDeliveryOtp = async (req, res) => {
+  try {
+    const { orderId, shopOrderId } = req.params;
+    const { otp } = req.body;
+    const order = await Order.findById(orderId).populate("user");
+    const shopOrder = order.shopOrders.id(shopOrderId);
+    if (!order || !shopOrder) {
+      return res.status(404).json({ message: "Order or shop order not found" });
+    }
+    if (
+      shopOrder.deliveryOtp !== otp ||
+      !shopOrder.otpExpires ||
+      shopOrder.otpExpires < Date.now()
+    ) {
+      return res.status(400).json({ message: "Invalid or expired OTP" });
     }
     console.log("Stored OTP:", shopOrder.deliveryOtp);
-console.log("Entered OTP:", otp);
-    shopOrder.status="delivered";
-    shopOrder.deliveredAt=  Date.now();
-    await order.save()
+    console.log("Entered OTP:", otp);
+    shopOrder.status = "delivered";
+    shopOrder.deliveredAt = Date.now();
+    await order.save();
     await DeliveryAssignment.deleteOne({
       shopOrderId,
       order: order._id,
-      assignedTO:shopOrder.assignedDeliveryBoy 
-    })
+      assignedTO: shopOrder.assignedDeliveryBoy,
+    });
 
-    return res.status(200).json({message:"Order marked as delivered successfully"})
+    return res
+      .status(200)
+      .json({ message: "Order marked as delivered successfully" });
   } catch (error) {
-    return res.status(500).json({message:"Error verifying delivery OTP"})
+    return res.status(500).json({ message: "Error verifying delivery OTP" });
   }
-}
+};

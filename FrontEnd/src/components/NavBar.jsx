@@ -90,10 +90,10 @@ function NavBar() {
       {/* DESKTOP SEARCH */}
       {userData?.user?.role === "user" && (
 
-        <div className="hidden md:flex relative w-[50%] lg:w-[40%] h-[50px] bg-white shadow-md rounded-lg items-center">
+        <div className="hidden md:flex relative w-[260px] lg:w-[340px] h-[44px] bg-white shadow-md rounded-lg items-center">
 
           {/* CITY */}
-          <div className="flex items-center w-[35%] px-3 border-r border-gray-300 gap-2">
+          <div className="flex items-center w-[40%] px-3 border-r border-gray-300 gap-2">
             <FaLocationDot className="text-[#ff4d2d]" />
             <span className="truncate text-gray-600 text-sm">
               {currentCity}
@@ -101,7 +101,7 @@ function NavBar() {
           </div>
 
           {/* SEARCH */}
-          <div className="flex items-center w-[65%] px-2 gap-2">
+          <div className="flex items-center w-[60%] px-2 gap-2">
 
             <IoIosSearch className="text-[#ff4d2d]" size={20} />
 

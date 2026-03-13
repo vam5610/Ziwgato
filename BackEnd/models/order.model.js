@@ -64,7 +64,19 @@ const orderSchema = new mongoose.Schema(
       longitude: Number,
     },
     totalAmount: { type: Number, required: true },
-    shopOrders: [shopOrderSchema]
+    shopOrders: [shopOrderSchema],
+    payment:{
+      type:Boolean,
+      default:false
+    },
+    razorpayOrderId:{
+      type:String,
+      default:""
+    },
+    razorpayPaymentId:{
+      type:String,
+      default:""
+    }
   },
   { timestamps: true },
 );

@@ -24,7 +24,9 @@ function CheckOut() {
   const dispatch = useDispatch();
   const [addressInput, setAddressInput] = useState("");
   const apikey = import.meta.env.VITE_GEOAPIKEY;
-  const { cartItems, totalAmount,userData } = useSelector((state) => state.user);
+  const { cartItems, totalAmount, userData } = useSelector(
+    (state) => state.user,
+  );
 
   const [paymentMethod, setPaymentMethod] = useState("cod");
   const delivery = totalAmount > 500 ? 0 : 40;
@@ -54,42 +56,79 @@ function CheckOut() {
       console.log(error);
     }
   };
-  console.log("userData", userData)
+  console.log("userData", userData);
 
-  const handlePlaceOrder= async()=>{
+  const handlePlaceOrder = async () => {
     try {
-      const result= await axios.post(`${serverUrl}/api/order/place-order`,{
-        paymentMethod,
-        deliveryAddress:{
-          text: addressInput,
-          latitude: location.lat,
-          longitude:location.lon
-         },
-         totalAmount,
-         cartItems
-      },{withCredentials:true})
-      dispatch(addMyorders(result.data))
-      navigate("/order-placed")
-    }catch (error) {
-  if (error.response) {
-    console.log("Server error:", error.response.data);
-    console.log("Status:", error.response.status);
-  } else if (error.request) {
-    console.log("No response from server:", error.request);
-  } else {
-    console.log("Axios setup error:", error.message);
-  }
-}
+      const result = await axios.post(
+        `${serverUrl}/api/order/place-order`,
+        {
+          paymentMethod,
+          deliveryAddress: {
+            text: addressInput,
+            latitude: location.lat,
+            longitude: location.lon,
+          },
+          totalAmount,
+          cartItems,
+        },
+        { withCredentials: true },
+      );
+
+      if (paymentMethod == "cod") {
+        dispatch(addMyorders(result.data));
+        navigate("/order-placed");
+      } else {
+        const orderId= result.data.orderId
+        const razorOrder= result.data.razorOrder
+        console.log("both", orderId,razorOrder)
+        openRazorpayWindow(orderId,razorOrder)
+      }
+    } catch (error) {
+      if (error.response) {
+        console.log("Server error:", error.response.data);
+        console.log("Status:", error.response.status);
+      } else if (error.request) {
+        console.log("No response from server:", error.request);
+      } else {
+        console.log("Axios setup error:", error.message);
+      }
+    }
+  };
+  const openRazorpayWindow= (orderId,razorOrder)=>{
+
+    const options={
+      key:import.meta.env.VITE_RAZORPAY_KEY_ID,
+      amount: razorOrder.amount,
+      currency:'INR',
+      name:"Zwigato",
+      description:"Food delivery website",
+      order_id:razorOrder.id,
+      handler: async function(response){
+        try {
+          const result= await axios.post(`${serverUrl}/api/order/verify-payment`,{
+            razorpay_payment_id: response.razorpay_payment_id,
+            orderId
+          },{withCredentials:true})
+          
+          dispatch(addMyorders(result.data));
+          navigate("/order-placed");
+        } catch (error) {
+          console.log(error)
+        }
+      }
+    }
+
+    const rzp=new window.Razorpay(options)
+    rzp.open();
 
   }
 
   const currentLocation = () => {
-    
-     const latitude= userData.user?.location.coordinates[1];
-      const longitude= userData.user?.location.coordinates[0];
-      dispatch(setLocation({ lat: latitude, lon: longitude }));
-      getAddressByLatLng(latitude, longitude);
-    
+    const latitude = userData.user?.location.coordinates[1];
+    const longitude = userData.user?.location.coordinates[0];
+    dispatch(setLocation({ lat: latitude, lon: longitude }));
+    getAddressByLatLng(latitude, longitude);
   };
 
   const getLatLngByAddress = async () => {
@@ -241,7 +280,12 @@ function CheckOut() {
             </div>
           </div>
         </section>
-        <button className='w-full bg-[#ff4d2d] hover:bg-[#e64526] text-white py-3 rounded-xl font-semibold' onClick={handlePlaceOrder}>{paymentMethod==="cod"?"Place Order" :"Pay & place order"}</button>
+        <button
+          className="w-full bg-[#ff4d2d] hover:bg-[#e64526] text-white py-3 rounded-xl font-semibold"
+          onClick={handlePlaceOrder}
+        >
+          {paymentMethod === "cod" ? "Place Order" : "Pay & place order"}
+        </button>
       </div>
     </div>
   );
