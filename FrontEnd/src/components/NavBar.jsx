@@ -14,6 +14,9 @@ function NavBar() {
 
   const { userData, currentCity, cartItems } = useSelector((state) => state.user);
   const { myShopData } = useSelector((state) => state.owner);
+  const userRole = userData?.user?.role;
+  const isUser = userRole === "user";
+  const isOwner = userRole === "owner";
 
   const [showInfo, setShowInfo] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
@@ -77,7 +80,7 @@ function NavBar() {
 
   return (
 
-    <div className="w-full h-[70px] flex items-center justify-between px-4 md:px-10 fixed top-0 z-[9999] bg-[#fff9f6] shadow-sm">
+    <div className="w-screen left-0 right-0 h-[70px] flex items-center justify-between px-4 md:px-10 fixed top-0 z-[9999] bg-[#fff9f6] shadow-sm">
 
       {/* LOGO */}
       <h1
@@ -88,7 +91,7 @@ function NavBar() {
       </h1>
 
       {/* DESKTOP SEARCH */}
-      {userData?.user?.role === "user" && (
+      {isUser && (
 
         <div className="hidden md:flex relative w-[260px] lg:w-[340px] h-[44px] bg-white shadow-md rounded-lg items-center">
 
@@ -158,7 +161,7 @@ function NavBar() {
       <div className="flex items-center gap-4">
 
         {/* MOBILE SEARCH ICON */}
-        {userData?.user?.role === "user" && (
+        {isUser && (
 
           showSearch ?
 
@@ -179,7 +182,7 @@ function NavBar() {
         )}
 
         {/* CART */}
-        {userData?.user?.role === "user" && (
+        {isUser && (
 
           <div
             className="relative cursor-pointer"
@@ -197,26 +200,28 @@ function NavBar() {
         )}
 
         {/* OWNER PANEL */}
-        {userData?.user?.role === "owner" && myShopData && (
+        {isOwner && myShopData && (
 
           <button
             onClick={() => navigate("/add-item")}
-            className="hidden md:flex items-center gap-2 px-3 py-1 bg-[#ff4d2d]/10 text-[#ff4d2d] rounded-lg"
+            className="flex items-center gap-2 px-3 py-1 bg-[#ff4d2d]/10 text-[#ff4d2d] rounded-lg"
           >
             <FaPlus />
-            Add Food
+            <span className="hidden sm:inline">Add Food</span>
           </button>
 
         )}
 
         {/* ORDERS */}
-        <div
-          className="hidden md:flex items-center gap-1 px-3 py-1 bg-[#ff4d2d]/10 text-[#ff4d2d] rounded-lg cursor-pointer"
-          onClick={() => navigate("/my-orders")}
-        >
-          <IoReceiptSharp />
-          Orders
-        </div>
+        {(isUser || isOwner) && (
+          <div
+            className="flex items-center gap-1 px-3 py-1 bg-[#ff4d2d]/10 text-[#ff4d2d] rounded-lg cursor-pointer"
+            onClick={() => navigate("/my-orders")}
+          >
+            <IoReceiptSharp />
+            <span className="hidden sm:inline">Orders</span>
+          </div>
+        )}
 
         {/* PROFILE */}
         <div
@@ -235,15 +240,33 @@ function NavBar() {
               {userData?.user?.fullName}
             </p>
 
-            {userData?.user?.role === "user" && (
+            {(isUser || isOwner) && (
 
               <button
                 className="text-[#ff4d2d] text-sm text-left"
                 onClick={() => navigate("/my-orders")}
               >
-                My Orders
+                Orders
               </button>
 
+            )}
+
+            {isOwner && myShopData && (
+              <button
+                className="text-[#ff4d2d] text-sm text-left"
+                onClick={() => navigate("/add-item")}
+              >
+                Add Food
+              </button>
+            )}
+
+            {isOwner && !myShopData && (
+              <button
+                className="text-[#ff4d2d] text-sm text-left"
+                onClick={() => navigate("/create-edit-shop")}
+              >
+                Create Shop
+              </button>
             )}
 
             <button

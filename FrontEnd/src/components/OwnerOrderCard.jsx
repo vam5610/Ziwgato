@@ -33,7 +33,7 @@ function OwnerOrderCard({ data }) {
         </p>
         {data.paymentMethod == "online" ? (
           <p className="gap-2 text-sm text-gray-600">
-            payment: {data.payment ? "true" : "false"}
+            Payment: Online ({data.payment ? "true" : "false"})
           </p>
         ) : (
           <p className="gap-2 text-sm text-gray-600">

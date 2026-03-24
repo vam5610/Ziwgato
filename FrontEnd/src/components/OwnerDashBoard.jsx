@@ -8,10 +8,9 @@ import OwnerItemCard from "./OwnerItemCard";
 function OwnerDashBoard() {
   const { myShopData } = useSelector((state) => state.owner);
   const navigate = useNavigate();
-  
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#fff9f6] to-orange-50">
+    <div className="w-screen min-h-screen bg-gradient-to-b from-[#fff9f6] to-orange-50">
       <NavBar />
 
       {!myShopData && (
@@ -27,7 +26,7 @@ function OwnerDashBoard() {
 
       {myShopData?.shop && (
         <div className="max-w-5xl mx-auto px-4 mt-10 space-y-8">
-
+                    
           {/* SHOP CARD */}
           <div className="relative bg-white rounded-3xl shadow-xl overflow-hidden">
             <img
