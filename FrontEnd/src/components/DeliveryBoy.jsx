@@ -6,7 +6,7 @@ import { serverUrl } from "../App";
 import DeliveryBoyTracking from "./DeliveryBoyTracking";
 
 function DeliveryBoy() {
-  const { userData } = useSelector((state) => state.user);
+  const { userData, socket } = useSelector((state) => state.user);
   const [availableAssignments, setAvailableAssignments] = useState([]);
   const [loading, setLoading] = useState(false);
   const [accepting, setAccepting] = useState(null);
@@ -47,17 +47,17 @@ function DeliveryBoy() {
 
   const acceptOrder = async (assignmentId) => {
     try {
+      setAccepting(assignmentId);
       const result = await axios.get(
-        `${serverUrl}/api/order/accept-order`,
-        { assignmentId },
-        {
-          withCredentials: true,
-        },
+        `${serverUrl}/api/order/accept-order/${assignmentId}`,
+        { withCredentials: true },
       );
       await getCurrentOrder();
       console.log("accept order result", result.data);
     } catch (error) {
       console.log(error);
+    } finally {
+      setAccepting(null);
     }
   };
 
@@ -91,6 +91,18 @@ function DeliveryBoy() {
     console.log(error)
   }
 }
+
+useEffect(()=>{
+  socket?.on("newAssignment",(data)=>{
+    console.log("📥 newAssignment received:", data);
+    if(data.sentTo=== userData?.user?._id){
+      setAvailableAssignments(prev => [...prev, data])
+    }
+  })
+  return()=>{
+    socket?.off("newAssignment")
+  } 
+},[socket,userData,availableAssignments])
 
   useEffect(() => {
     getAssignment();
