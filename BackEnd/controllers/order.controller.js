@@ -9,8 +9,8 @@ import dotenv from "dotenv";
 dotenv.config();
 
 let instance = new Razorpay({
-  key_id:process.env.RAZORPAY_KEY_ID,
-  key_secret:process.env.RAZORPAY_KEY_SECRET,
+  key_id: process.env.RAZORPAY_KEY_ID,
+  key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
 export const placeOrder = async (req, res) => {
   try {
@@ -63,27 +63,26 @@ export const placeOrder = async (req, res) => {
       }),
     );
 
-    if(paymentMethod=="online"){
-      const razorOrder= await instance.orders.create({
-        amount: Math.round(totalAmount*100),
-        currency: 'INR',
-        receipt:`receipt_${Date.now()}`
-      })
+    if (paymentMethod == "online") {
+      const razorOrder = await instance.orders.create({
+        amount: Math.round(totalAmount * 100),
+        currency: "INR",
+        receipt: `receipt_${Date.now()}`,
+      });
 
       const newOrder = await Order.create({
-      user: req.userId,
-      paymentMethod,
-      deliveryAddress,
-      totalAmount,
-      shopOrders,
-      razorpayOrderId: razorOrder.id,
-      payment:false
-    });
-    return res.status(200).json({
-      razorOrder,
-      orderId: newOrder._id,
-
-    })
+        user: req.userId,
+        paymentMethod,
+        deliveryAddress,
+        totalAmount,
+        shopOrders,
+        razorpayOrderId: razorOrder.id,
+        payment: false,
+      });
+      return res.status(200).json({
+        razorOrder,
+        orderId: newOrder._id,
+      });
     }
 
     const newOrder = await Order.create({
@@ -97,43 +96,87 @@ export const placeOrder = async (req, res) => {
       "shopOrders.shopOrderItem.item",
       "name image price",
     );
+    await newOrder.populate(
+      "shopOrders.shopOrderItem.item",
+      "name image price",
+    );
     await newOrder.populate("shopOrders.shop", "name");
+    // populate owner so we can access owner's socketId saved on User model
+    await newOrder.populate("shopOrders.owner", "socketId");
+    await newOrder.populate("user", "name email mobile");
+    const io = req.app.get("io");
+
+    if (io) {
+      newOrder.shopOrders.forEach((shopOrder) => {
+        const ownerSocketId = shopOrder?.owner?.socketId;
+        console.log("new order", newOrder)
+        console.log("📤 Emitting newOrder to owner:", ownerSocketId);
+        if (ownerSocketId) {
+          io.to(ownerSocketId).emit("newOrder", {
+            _id: newOrder._id,
+            paymentMethod: newOrder.paymentMethod,
+            user: newOrder.user,
+            shopOrders: shopOrder,
+            createdAt: newOrder.createdAt,
+            deliveryAddress: newOrder.deliveryAddress,
+            payment: newOrder.payment,
+          });
+        }
+      });
+    }
+
     return res.status(201).json(newOrder);
   } catch (error) {
     return res.status(500).json({ message: `place order error ${error}` });
   }
 };
 
-
-export const verifyPayment= async(req,res)=>{
+export const verifyPayment = async (req, res) => {
   try {
-    const {razorpay_payment_id, orderId}= req.body;
-    const payment= await instance.payments.fetch(razorpay_payment_id);
-    if(!payment || payment.status!="captured"){
-       return res.status(400).json({message:"Payment not caputred"})
+    const { razorpay_payment_id, orderId } = req.body;
+    const payment = await instance.payments.fetch(razorpay_payment_id);
+    if (!payment || payment.status != "captured") {
+      return res.status(400).json({ message: "Payment not caputred" });
     }
-    const order= await Order.findById(orderId)
-    if(!order){
-      return res.status(400).json({message:"order not found"})
+    const order = await Order.findById(orderId);
+    if (!order) {
+      return res.status(400).json({ message: "order not found" });
     }
-    order.payment= true;
-    order.razorpayPaymentId= razorpay_payment_id
+    order.payment = true;
+    order.razorpayPaymentId = razorpay_payment_id;
     await order.save();
 
-    await order.populate(
-      "shopOrders.shopOrderItem.item",
-      "name image price",
-    );
+    await order.populate("shopOrders.shopOrderItem.item", "name image price");
     await order.populate("shopOrders.shop", "name");
+    // populate owner so we can access owner's socketId saved on User model
+    await order.populate("shopOrders.owner", "socketId");
+    await order.populate("user", "name email mobile");
+    const io = req.app.get("io");
 
-   return res.status(200).json(order);
+    if (io) {
+      order.shopOrders.forEach((shopOrder) => {
+        const ownerSocketId = shopOrder.owner?.socketId;
+        if (ownerSocketId) {
+          io.to(ownerSocketId).emit("newOrder", {
+            _id: order._id,
+            paymentMethod: order.paymentMethod,
+            user: order.user,
+            shopOrders: shopOrder,
+            createdAt: order.createdAt,
+            deliveryAddress: order.deliveryAddress,
+            payment: order.payment,
+          });
+        }
+      });
+    }
 
-
-
+    return res.status(200).json(order);
   } catch (error) {
-    return res.status(500).json({message: `verify payment order error ${error}`})
+    return res
+      .status(500)
+      .json({ message: `verify payment order error ${error}` });
   }
-}
+};
 
 export const getMyOrders = async (req, res) => {
   try {
@@ -161,7 +204,7 @@ export const getMyOrders = async (req, res) => {
         shopOrders: order.shopOrders.find((o) => o.owner._id == req.userId),
         createdAt: order.createdAt,
         deliveryAddress: order.deliveryAddress,
-        payment :order.payment 
+        payment: order.payment,
       }));
       return res.status(200).json(filteredOrder);
     }
@@ -175,6 +218,9 @@ export const updateOrderStatus = async (req, res) => {
     const { orderId, shopId } = req.params;
     const { status } = req.body;
     const order = await Order.findById(orderId);
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
     const shopOrder = order.shopOrders.find((o) => o.shop == shopId);
     if (!shopOrder) {
       return res.status(400).json({ message: "Shop order not found" });
@@ -200,7 +246,7 @@ export const updateOrderStatus = async (req, res) => {
       const busyIds = await DeliveryAssignment.find({
         assignedTO: { $in: nearByIds },
         status: { $nin: ["broadcasted", "completed"] },
-      }).distinct("assignedTo");
+      }).distinct("assignedTO");
 
       const busyIdSet = new Set(busyIds.map((id) => String(id)));
       const availableBoys = nearByDeliveryBoys.filter(
@@ -229,11 +275,40 @@ export const updateOrderStatus = async (req, res) => {
         id: b._id,
         fullName: b.fullName,
         longitude: b.location.coordinates?.[0],
-        longitude: b.location.coordinates?.[1],
+        latitude: b.location.coordinates?.[1],
         mobile: b.mobile,
       }));
+
+      await deliveryAssignment.populate("order");
+      await deliveryAssignment.populate("shop");
+
+      const io = req.app.get("io");
+      if (io) {
+        availableBoys.forEach((boy) => {
+          const boySocketId = boy.socketId;
+          console.log("📤 Emitting newAssignment to delivery boy:", boySocketId);
+          if (boySocketId) {
+            io.to(boySocketId).emit("newAssignment", {
+              sentTo: boy._id,
+              assignmentId: deliveryAssignment._id,
+              orderId: deliveryAssignment.order._id,
+              shopName: deliveryAssignment.shop.name,
+              deliveryAddress: deliveryAssignment.order.deliveryAddress,
+              items:
+                deliveryAssignment.order.shopOrders.find((so) => so._id.equals(deliveryAssignment.shopOrderId))
+                  .shopOrderItem || [],
+              subTotal: deliveryAssignment.order.shopOrders.find((so) =>
+                so._id.equals(deliveryAssignment.shopOrderId),
+              )?.subTotal
+            });
+          }
+        });
+      }
     }
     const updatedShopOrder = order.shopOrders.find((o) => o.shop == shopId);
+    if (!updatedShopOrder) {
+      return res.status(400).json({ message: "shop order not found" });
+    }
 
     await order.save();
     await order.populate("shopOrders.shop", "name");
@@ -241,12 +316,29 @@ export const updateOrderStatus = async (req, res) => {
       "shopOrders.assignedDeliveryBoy",
       "fullName email mobile",
     );
+    await order.populate("user", "socketId");
+    const io = req.app.get("io");
+    if (io) {
+      const userSocketId = order.user.socketId;
+      console.log("📤 Emitting update-status to user:", userSocketId);
+      if (userSocketId) {
+        io.to(userSocketId).emit("update-status", {
+          orderId: order._id,
+          shopId: updatedShopOrder.shop._id,
+          status: updatedShopOrder.status,
+          userId: order.user._id,
+        });
+      }
+    }
 
     return res.status(200).json({
       shopOrder: updatedShopOrder,
       assignedDeliveryBoy: updatedShopOrder?.assignedDeliveryBoy,
       availableBoys: deliveryBoysPayLoad,
-      assignment: updatedShopOrder?.assignment._id,
+      assignment:
+        updatedShopOrder?.assignment?._id ||
+        updatedShopOrder?.assignment ||
+        null,
     });
   } catch (error) {
     return res.status(500).json({ message: "update orders status error" });

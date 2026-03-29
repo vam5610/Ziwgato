@@ -1,10 +1,10 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import SignUp from './pages/SignUp'
 import SignIn from './pages/SignIn'
 import ForgotPassword from './pages/ForgotPassword'
 import userGetCurr from './hooks/userGetCurr'
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import Home from './pages/Home'
 import useGetCity from './hooks/useGetCity'
 import useGetMyShop from './hooks/useGetMyShop'
@@ -22,6 +22,8 @@ import useGetMyOrders from './hooks/useGetMyOrders'
 import useUpdateLocation from './hooks/useUpdateLocation'
 import TrackOrder from './components/TrackOrder'
 import Shop from './pages/Shop'
+import { setSocket } from './redux/userSlice'
+import { io } from 'socket.io-client'
 
 export const serverUrl="http://localhost:8000"  
 function App() {
@@ -32,7 +34,25 @@ function App() {
   useGetShopByCity();
   useGetItemsByCity();
   useGetMyOrders();
+
   const {userData}= useSelector(state=>state.user);
+  console.log("user data", userData)
+  const dispatch= useDispatch();
+
+  useEffect(()=>{
+    const socketInstance= io(serverUrl,{withCredentials:true}) 
+    dispatch(setSocket(socketInstance))
+    socketInstance.on('connect',()=>{
+      if(userData){
+        socketInstance.emit("identity",{userId:userData?.user._id})
+      }
+    })
+    return ()=>{
+      socketInstance.disconnect();
+    }
+  },[userData?.user?._id])
+
+   
   return (
     <Routes>
       <Route path='/signup' element={!userData?<SignUp/>: <Navigate to={"/"} /> } />
