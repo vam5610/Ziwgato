@@ -25,7 +25,7 @@ import Shop from './pages/Shop'
 import { setSocket } from './redux/userSlice'
 import { io } from 'socket.io-client'
 
-export const serverUrl="http://localhost:8000"  
+export const serverUrl="https://ziwgato-backend-myvr.onrender.com"  
 function App() {
   userGetCurr();
   useUpdateLocation()
