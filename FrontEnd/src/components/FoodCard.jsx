@@ -5,19 +5,28 @@ import { FaMinus, FaPlus, FaCartPlus } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
 import { addToCart } from "../redux/userSlice";
 
-function FoodCard({ data }) {
+function FoodCard({ data, onRate, selectedRating }) {
   const [quantity, setQuantity] = useState(0);
   const dispatch= useDispatch();
   const {cartItems}= useSelector(state=>state.user)
   const renderStars = (rating) => {
     const stars = [];
+    const current = typeof selectedRating !== "undefined" ? selectedRating : rating;
     for (let i = 1; i <= 5; i++) {
+      const filled = i <= current;
       stars.push(
-        i <= rating ? (
-          <FaStar key={i} className="text-yellow-400 text-lg" />
-        ) : (
-          <CiStar key={i} className="text-lg text-gray-400" />
-        )
+        <button
+          key={i}
+          type="button"
+          onClick={() => onRate && onRate(i)}
+          className={`px-0.5 ${onRate ? "hover:scale-110 transition-transform" : ""}`}
+        >
+          {filled ? (
+            <FaStar className="text-yellow-400 text-lg" />
+          ) : (
+            <CiStar className="text-lg text-gray-400" />
+          )}
+        </button>
       );
     }
     return stars;
