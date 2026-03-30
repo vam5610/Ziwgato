@@ -1,5 +1,45 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { FaStar } from "react-icons/fa";
+import { CiStar } from "react-icons/ci";
+import axios from "axios";
+import { serverUrl } from "../App";
+
+function ItemRating({ item }){
+  const [selected, setSelected] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  const handleRate = async (rating) => {
+    if(loading) return;
+    try{
+      setLoading(true);
+      await axios.post(`${serverUrl}/api/item/rating`, { itemId: item.item?._id || item.item, rating }, { withCredentials: true });
+      setSelected(rating);
+    }catch(err){
+      console.log(err);
+    }finally{
+      setLoading(false);
+    }
+  }
+
+  const avg = item.item?.rating?.average || 0;
+  const current = selected ?? avg;
+
+  return (
+    <div className="flex items-center gap-2">
+      {Array.from({length:5}).map((_,i)=>{
+        const idx = i+1;
+        const filled = idx <= current;
+        return (
+          <button key={idx} type="button" onClick={()=>handleRate(idx)} className="px-0.5">
+            {filled ? <FaStar className="text-yellow-400 text-sm"/> : <CiStar className="text-sm text-gray-400"/>}
+          </button>
+        )
+      })}
+      <span className="text-xs text-gray-500">{item.item?.rating?.count || 0} reviews</span>
+    </div>
+  )
+}
 
 function UserOrderCard({ data }) {
   const formatDate = (dateString) => {
@@ -116,6 +156,9 @@ function UserOrderCard({ data }) {
                       </div>
                       <div className="p-3">
                         <p className="text-sm font-bold text-gray-800 truncate">{item.name}</p>
+                        <div className="mt-2">
+                          <ItemRating item={item} />
+                        </div>
                         <div className="flex justify-between items-center mt-2">
                           <p className="text-xs text-gray-600">₹{item.price}/pc</p>
                           <p className="text-sm font-bold text-[#ff4d2d]">₹{item.price * item.quantity}</p>

@@ -7,6 +7,7 @@ import { useSelector } from "react-redux";
 import FoodCard from "./FoodCard";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { serverUrl } from "../App";
 
 function UserDashBoard() {
 
@@ -25,6 +26,32 @@ function UserDashBoard() {
 
   const [updatedItemsList, setUpdatedItemsList] = useState([]);
 
+  const [selectRating,setSelectRating]=useState({})
+
+  const handleRating=async(itemId, rating)=>{
+    try {
+      const result = await axios.post(`${serverUrl}/api/item/rating`,{
+        itemId,rating
+      },{
+        withCredentials:true
+      })
+
+      // optimistic UI: mark selected rating immediately
+      setSelectRating(prev=>({
+        ...prev,
+        [itemId]:rating
+      }))
+
+      // if backend returned updated rating, merge it into the displayed list
+      const updatedRating = result?.data?.rating;
+      if(updatedRating){
+        setUpdatedItemsList(prevList => prevList.map(it => it._id === itemId ? {...it, rating: updatedRating} : it))
+      }
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
   const navigate = useNavigate();
 
   /* ---------------- FILTER FUNCTION ---------------- */
@@ -38,6 +65,7 @@ function UserDashBoard() {
       setUpdatedItemsList(filteredList);
     }
   };
+
 
   useEffect(() => {
     if (itemsInMyCity) {
@@ -216,7 +244,11 @@ function UserDashBoard() {
               key={item._id}
               className="transform hover:scale-105 transition duration-300"
             >
-              <FoodCard data={item} />
+              <FoodCard
+                data={item}
+                onRate={(rating)=>handleRating(item._id, rating)}
+                selectedRating={selectRating[item._id]}
+              />
             </div>
           ))}
 
