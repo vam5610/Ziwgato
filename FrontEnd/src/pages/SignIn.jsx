@@ -55,7 +55,6 @@ setErr(error?.response?.data?.message)    }
        }, {withCredentials:true})
        setErr("")
        dispatch(setUserData(data))
-       console.log(data)
     } catch (error) {
 setErr(error?.response?.data?.message)    }
   }

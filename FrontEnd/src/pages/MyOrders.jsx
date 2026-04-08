@@ -9,7 +9,6 @@ import { setMyOrders, updateRealTImeStatus } from "../redux/userSlice";
 
 function MyOrders() {
   const { userData, myOrders, socket } = useSelector((state) => state.user);
-  console.log("userData",userData?.user.role)
   const navigate = useNavigate();
   const dispatch= useDispatch();
   console.log("Socket:", socket);

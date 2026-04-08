@@ -36,7 +36,6 @@ function App() {
   useGetMyOrders();
 
   const {userData}= useSelector(state=>state.user);
-  console.log("user data", userData)
   const dispatch= useDispatch();
 
   useEffect(()=>{
