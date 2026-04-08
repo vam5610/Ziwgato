@@ -8,7 +8,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import Home from './pages/Home'
 import useGetCity from './hooks/useGetCity'
 import useGetMyShop from './hooks/useGetMyShop'
-import CreateEditShop from './pages/createEditShop'
+import CreateEditShop from './pages/CreateEditShop'
 import AddItem from './pages/AddItem'
 import EditItem from './pages/EditItem'
 import useGetShopByCity from './hooks/useGetShopByCity'
@@ -25,7 +25,7 @@ import Shop from './pages/Shop'
 import { setSocket } from './redux/userSlice'
 import { io } from 'socket.io-client'
 
-export const serverUrl="http://localhost:8000"  
+export const serverUrl="https://ziwgato-backend-myvr.onrender.com"  
 function App() {
   userGetCurr();
   useUpdateLocation()
