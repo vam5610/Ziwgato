@@ -3,12 +3,14 @@ import { FaLeaf, FaDrumstickBite, FaStar } from "react-icons/fa";
 import { CiStar } from "react-icons/ci";
 import { FaMinus, FaPlus, FaCartPlus } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import { addToCart } from "../redux/userSlice";
 
 function FoodCard({ data, onRate, selectedRating }) {
   const [quantity, setQuantity] = useState(0);
-  const dispatch= useDispatch();
-  const {cartItems}= useSelector(state=>state.user)
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { cartItems, userData } = useSelector((state) => state.user)
   const renderStars = (rating) => {
     const stars = [];
     const current = typeof selectedRating !== "undefined" ? selectedRating : rating;
@@ -93,17 +95,27 @@ function FoodCard({ data, onRate, selectedRating }) {
   </button>
 
   <div className="relative">
-    <button className={`${cartItems.some(i=>i.id== data._id)? "bg-gray-700" : "bg-[#ff4d2d]"} text-white px-3 py-2 rounded-3xl hover:bg-[#e64528] transition `} onClick={()=>{
-      quantity>0? dispatch(addToCart({
-      id:data._id,
-      name: data.name,
-      image: data.image,
-      price: data.price, 
-      shop: data.shop,
-      quantity: quantity,
-      foodType:data.foodType
-    })) : ""
-    }} >   
+    <button
+      className={`${cartItems.some((i) => i.id == data._id) ? "bg-gray-700" : "bg-[#ff4d2d]"} text-white px-3 py-2 rounded-3xl hover:bg-[#e64528] transition `}
+      onClick={() => {
+        if (!userData) {
+          navigate("/signin");
+          return;
+        }
+        if (quantity <= 0) return;
+        dispatch(
+          addToCart({
+            id: data._id,
+            name: data.name,
+            image: data.image,
+            price: data.price,
+            shop: data.shop,
+            quantity: quantity,
+            foodType: data.foodType,
+          })
+        );
+      }}
+    >
       <FaCartPlus />
     </button>
     {quantity > 0 && (
