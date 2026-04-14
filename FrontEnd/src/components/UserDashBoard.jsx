@@ -222,7 +222,7 @@ function UserDashBoard() {
 
       <div className="w-full max-w-7xl bg-white/90 backdrop-blur-lg p-6 rounded-3xl shadow-xl mt-6">
         <h1 className="text-2xl font-bold mb-5 text-gray-800">
-          ðŸ‘‹ Hello Inspiration
+          ‹ Hello Inspiration
         </h1>
 
         <div className="relative">
@@ -262,7 +262,7 @@ function UserDashBoard() {
 
       <div className="w-full max-w-7xl px-6 mt-10">
         <h1 className="text-2xl font-bold mb-5 text-gray-800">
-          ðŸ¬ Best Shops in{" "}
+           Best Shops in{" "}
           <span className="text-[#ff4d2d]">{currentCity || "your city"}</span>
         </h1>
 
@@ -303,7 +303,7 @@ function UserDashBoard() {
 
       <div className="w-full max-w-7xl flex flex-col gap-6 px-6 mt-12 mb-10">
         <h1 className="text-3xl font-extrabold text-gray-800 text-center sm:text-left">
-          ðŸ” Suggested Food Items
+           Suggested Food Items
         </h1>
 
         <div className="w-full flex flex-wrap gap-8 justify-center sm:justify-start">
