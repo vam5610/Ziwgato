@@ -9,8 +9,64 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { serverUrl } from "../App";
 
-function UserDashBoard() {
+const placeholderShops = [
+  {
+    _id: "demo-shop-1",
+    name: "Sunset Bites",
+    image:
+      "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=600&q=80",
+  },
+  {
+    _id: "demo-shop-2",
+    name: "Stone Oven",
+    image:
+      "https://images.unsplash.com/photo-1559839734-5ae63f3521b0?auto=format&fit=crop&w=600&q=80",
+  },
+  {
+    _id: "demo-shop-3",
+    name: "Citrus Cravings",
+    image:
+      "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=600&q=80",
+  },
+];
 
+const placeholderItems = [
+  {
+    _id: "demo-item-1",
+    name: "Crispy Veggie Wrap",
+    image:
+      "https://images.unsplash.com/photo-1478145046317-39f10e56b5e9?auto=format&fit=crop&w=600&q=80",
+    price: 169,
+    category: "Snacks",
+    foodType: "veg",
+    rating: { average: 4.6, count: 192 },
+    shop: placeholderShops[0],
+  },
+  {
+    _id: "demo-item-2",
+    name: "Herb Roasted Chicken",
+    image:
+      "https://images.unsplash.com/photo-1604908176970-40cb5eca0cf0?auto=format&fit=crop&w=600&q=80",
+    price: 349,
+    category: "Main Course",
+    foodType: "nonveg",
+    rating: { average: 4.2, count: 86 },
+    shop: placeholderShops[1],
+  },
+  {
+    _id: "demo-item-3",
+    name: "Paneer Tikka Platter",
+    image:
+      "https://images.unsplash.com/photo-1617191511454-c8f6dbfdb4b4?auto=format&fit=crop&w=600&q=80",
+    price: 279,
+    category: "North Indian",
+    foodType: "veg",
+    rating: { average: 4.8, count: 214 },
+    shop: placeholderShops[2],
+  },
+];
+
+function UserDashBoard() {
   /* ---------------- REFS ---------------- */
   const cateScrollRef = useRef(null);
   const shopScrollRef = useRef(null);
@@ -18,62 +74,87 @@ function UserDashBoard() {
   /* ---------------- STATE ---------------- */
   const [showLeftCateButton, setShowLeftCateButton] = useState(false);
   const [showRightCateButton, setShowRightCateButton] = useState(false);
-
   const [showLeftShopButton, setShowLeftShopButton] = useState(false);
   const [showRightShopButton, setShowRightShopButton] = useState(false);
+  const [updatedItemsList, setUpdatedItemsList] = useState(placeholderItems);
+  const [selectRating, setSelectRating] = useState({});
 
-  const { currentCity, shopsInMyCity, itemsInMyCity } = useSelector((state) => state.user);
-
-  const [updatedItemsList, setUpdatedItemsList] = useState([]);
-
-  const [selectRating,setSelectRating]=useState({})
-
-  const handleRating=async(itemId, rating)=>{
-    try {
-      const result = await axios.post(`${serverUrl}/api/item/rating`,{
-        itemId,rating
-      },{
-        withCredentials:true
-      })
-
-      // optimistic UI: mark selected rating immediately
-      setSelectRating(prev=>({
-        ...prev,
-        [itemId]:rating
-      }))
-
-      // if backend returned updated rating, merge it into the displayed list
-      const updatedRating = result?.data?.rating;
-      if(updatedRating){
-        setUpdatedItemsList(prevList => prevList.map(it => it._id === itemId ? {...it, rating: updatedRating} : it))
-      }
-    } catch (error) {
-      console.log(error)
-    }
-  }
+  const { currentCity, shopsInMyCity, itemsInMyCity, userData } = useSelector(
+    (state) => state.user
+  );
 
   const navigate = useNavigate();
 
-  /* ---------------- FILTER FUNCTION ---------------- */
-  const handleByFilter = (category) => {
-    if (category === "All") {
-      setUpdatedItemsList(itemsInMyCity);
-    } else {
-      const filteredList = itemsInMyCity?.filter(
-        (item) => item.category === category
-      );
-      setUpdatedItemsList(filteredList);
-    }
-  };
-
+  const shopsToDisplay = shopsInMyCity?.length ? shopsInMyCity : placeholderShops;
+  const itemsBase =
+    itemsInMyCity?.length && itemsInMyCity?.length > 0
+      ? itemsInMyCity
+      : placeholderItems;
 
   useEffect(() => {
-    if (itemsInMyCity) {
+    if (itemsInMyCity?.length) {
       setUpdatedItemsList(itemsInMyCity);
+    } else {
+      setUpdatedItemsList(placeholderItems);
     }
   }, [itemsInMyCity]);
 
-  /* ---------------- CATEGORY SCROLL ---------------- */
+  /* ---------------- ACTION HANDLERS ---------------- */
+  const handleRating = async (itemId, rating) => {
+    if (!userData) {
+      navigate("/signin");
+      return;
+    }
+
+    try {
+      const result = await axios.post(
+        `${serverUrl}/api/item/rating`,
+        {
+          itemId,
+          rating,
+        },
+        {
+          withCredentials: true,
+        }
+      );
+
+      setSelectRating((prev) => ({
+        ...prev,
+        [itemId]: rating,
+      }));
+
+      const updatedRating = result?.data?.rating;
+      if (updatedRating) {
+        setUpdatedItemsList((prevList) =>
+          prevList.map((it) =>
+            it._id === itemId ? { ...it, rating: updatedRating } : it
+          )
+        );
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const handleByFilter = (category) => {
+    const source = itemsBase;
+    if (category === "All") {
+      setUpdatedItemsList(source);
+      return;
+    }
+    const filteredList = source.filter((item) => item.category === category);
+    setUpdatedItemsList(filteredList);
+  };
+
+  const handleShopSelect = (shopId) => {
+    if (!userData) {
+      navigate("/signin");
+      return;
+    }
+    navigate(`/shop/${shopId}`);
+  };
+
+  /* ---------------- SCROLL HELPERS ---------------- */
   const updateCategoryButtons = () => {
     const el = cateScrollRef.current;
     if (!el) return;
@@ -104,7 +185,6 @@ function UserDashBoard() {
     };
   }, []);
 
-  /* ---------------- SHOP SCROLL ---------------- */
   const updateShopButtons = () => {
     const el = shopScrollRef.current;
     if (!el) return;
@@ -135,22 +215,17 @@ function UserDashBoard() {
     };
   }, []);
 
-
- 
-
   /* ---------------- UI ---------------- */
   return (
     <div className="w-screen min-h-screen flex flex-col items-center bg-gradient-to-br from-[#fff4ef] via-[#fff9f6] to-[#fff] overflow-y-auto">
       <NavBar />
 
-      {/* -------- CATEGORY SECTION -------- */}
       <div className="w-full max-w-7xl bg-white/90 backdrop-blur-lg p-6 rounded-3xl shadow-xl mt-6">
         <h1 className="text-2xl font-bold mb-5 text-gray-800">
-          👋 Hello Inspiration
+          ðŸ‘‹ Hello Inspiration
         </h1>
 
         <div className="relative">
-
           {showLeftCateButton && (
             <button
               onClick={() => scrollCategory("left")}
@@ -182,19 +257,16 @@ function UserDashBoard() {
               <FaCircleChevronRight />
             </button>
           )}
-
         </div>
       </div>
 
-      {/* -------- SHOP SECTION -------- */}
       <div className="w-full max-w-7xl px-6 mt-10">
-
         <h1 className="text-2xl font-bold mb-5 text-gray-800">
-          🏬 Best Shops in <span className="text-[#ff4d2d]">{currentCity}</span>
+          ðŸ¬ Best Shops in{" "}
+          <span className="text-[#ff4d2d]">{currentCity || "your city"}</span>
         </h1>
 
         <div className="relative">
-
           {showLeftShopButton && (
             <button
               onClick={() => scrollShop("left")}
@@ -208,12 +280,12 @@ function UserDashBoard() {
             ref={shopScrollRef}
             className="flex gap-5 overflow-x-auto scroll-smooth pb-3 scrollbar-hide"
           >
-            {shopsInMyCity?.map((shop) => (
+            {shopsToDisplay.map((shop) => (
               <CategoryCard
                 key={shop._id}
                 name={shop.name}
                 image={shop.image}
-                onClick={() => navigate(`/shop/${shop._id}`)}
+                onClick={() => handleShopSelect(shop._id)}
               />
             ))}
           </div>
@@ -226,19 +298,15 @@ function UserDashBoard() {
               <FaCircleChevronRight />
             </button>
           )}
-
         </div>
       </div>
 
-      {/* -------- FOOD ITEMS -------- */}
       <div className="w-full max-w-7xl flex flex-col gap-6 px-6 mt-12 mb-10">
-
         <h1 className="text-3xl font-extrabold text-gray-800 text-center sm:text-left">
-          🍔 Suggested Food Items
+          ðŸ” Suggested Food Items
         </h1>
 
         <div className="w-full flex flex-wrap gap-8 justify-center sm:justify-start">
-
           {updatedItemsList?.map((item) => (
             <div
               key={item._id}
@@ -246,16 +314,13 @@ function UserDashBoard() {
             >
               <FoodCard
                 data={item}
-                onRate={(rating)=>handleRating(item._id, rating)}
+                onRate={(rating) => handleRating(item._id, rating)}
                 selectedRating={selectRating[item._id]}
               />
             </div>
           ))}
-
         </div>
-
       </div>
-
     </div>
   );
 }
